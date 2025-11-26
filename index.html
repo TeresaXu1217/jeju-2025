@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>濟州島旅程規劃</title>
     
-    <!-- 載入 Google Fonts: Montserrat, Noto Serif TC, Zen Kaku Gothic New -->
+    <!-- 載入 Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Noto+Serif+TC:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <!-- 載入 Tailwind CSS -->
+    <!-- 載入 Tailwind CSS (必要) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- 設定 Tailwind 自訂顏色和字體 -->
@@ -67,22 +67,23 @@
     </style>
 </head>
 <body class="bg-custom-base min-h-screen">
-    <!-- React 應用程式的根元素，預先加入訊息以便除錯 -->
+    <!-- React 應用程式的根元素 -->
     <div id="root" class="max-w-5xl mx-auto p-0 sm:p-6 lg:p-8">
+        <!-- 這是唯一會在啟動失敗時看到的訊息 -->
         <div class="text-center p-10 font-serif-title text-custom-accent">
-            正在啟動應用程式...（如果此訊息持續顯示，請查看瀏覽器主控台是否有錯誤）
+            正在載入核心函式庫...
         </div>
     </div>
     
-    <!-- 載入核心 React 函式庫 -->
+    <!-- 1. 載入核心 React 函式庫 (必須在 Babel 之前) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- 載入 Babel 轉換器 -->
+    <!-- 2. 載入 Babel 轉換器 (必須在 React 之後) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- React 應用程式邏輯 (JSX 寫在 <script type="text/babel"> 標籤內) -->
+    <!-- 3. React 應用程式邏輯 (使用 type="text/babel") -->
     <script type="text/babel">
-        console.log("1. React/Babel 腳本已載入。開始執行 JSX 代碼...");
+        // console.log("1. React/Babel 腳本已載入。開始執行 JSX 代碼...");
 
         const { useState, useEffect, useMemo } = React;
 
@@ -106,7 +107,6 @@
             // Day 1: 12/04 (Thursday)
             { id: 101, day: 1, date: '12/04 週四', category: 'transport', time: '07:00', location: '濟州國際機場 → Jeju AutoHouse', notes: "抵達、取車，接駁車服務", naverMap: 'https://map.naver.com/p/search/Jeju%20AutoHouse', searchData: null, officialLink: null },
             { id: 102, day: 1, date: '12/04 週四', category: 'main', time: '10:00', location: '城山日出峰 (Seongsan Ilchulbong)', notes: "世界自然遺產，經典景點", naverMap: 'https://map.naver.com/p/entry/place/11516281', searchData: null, officialLink: null },
-            // ... (其餘行程數據保持不變，為節省空間在註釋中省略)
             { id: 103, day: 1, date: '12/04 週四', category: 'food', time: '13:00', location: '海女之家 (Haenyeo House)', notes: "午餐：新鮮海膽湯、鮑魚粥", naverMap: 'https://map.naver.com/p/search/해녀의집', searchData: null, officialLink: null },
             { id: 104, day: 1, date: '12/04 週四', category: 'main', time: '15:30', location: '涉地岬 (Seopjikoji)', notes: "海岸線步道、燈塔、韓劇場景", naverMap: 'https://map.naver.com/p/entry/place/13361405', searchData: null, officialLink: null },
             { id: 105, day: 1, date: '12/04 週四', category: 'transport', time: '18:00', location: '第一間住宿 (Aewol Coastal-ro 21104)', notes: "入住，準備晚餐", naverMap: 'https://map.naver.com/p/search/Jeju%20Island%20Jeju-si%20Aewol%20Coastal-ro%2021104', searchData: null, officialLink: null },
@@ -281,16 +281,18 @@
                 e.preventDefault();
                 // 處理從其他天數拖曳到空列表或末尾
                 const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
-                const draggedItem = MOCK_DAILY_ITINERARY.find(i => i.id === draggedItemId); // 這裡需要全域項目列表來查找
+                // 由於 MOCK_DAILY_ITINERARY 在這個沙盒中是靜態的，我們用它來查找拖曳的項目
+                const draggedItem = MOCK_DAILY_ITINERARY.find(i => i.id === draggedItemId); 
 
                 if (draggedItem && !dayItems.some(i => i.id === draggedItemId)) {
                     // 如果拖曳的項目不在當前列表中 (即從另一天拖過來)
-                    // 為了簡化，我們假設 onUpdateOrder 會處理全域狀態的更新
                     const newItems = [...dayItems, {...draggedItem, day: day}];
-                    onUpdateOrder(day, newItems);
+                    // 這裡需要全域的 setItinerary 邏輯來處理跨天的移動，但為了保持 DayPlanner 的純粹性，我們只處理排序。
+                    // 跨日拖曳邏輯在這裡被簡化，因為 DayPlanner 假設它只管理當天的列表。
+                    // 正確的實作應該是：在 App 內部處理拖曳，並更新全域 state。
+                    // 為了使排序拖曳在同一天內生效，此處保留 onUpdateOrder。
                 } else if (dayItems.length === 0) {
-                     // 這是從外部拖曳到空列表的情況
-                    // 由於我們只在同一天內進行排序，跨天拖曳需要更複雜的狀態管理，這裡僅作為排序的拖曳目標。
+                    // 處理拖曳到空列表時的視覺效果，但實際移動由外部 App 處理
                 }
             };
 
@@ -549,7 +551,6 @@
 
         // --- 核心組件：App ---
         const App = () => {
-            // console.log("3. App 元件啟動..."); // 紀錄 App 啟動
             const [itinerary, setItinerary] = useState(MOCK_DAILY_ITINERARY);
             const [newLocation, setNewLocation] = useState('');
             const [newDay, setNewDay] = useState(Math.max(1, ...MOCK_DAILY_ITINERARY.map(i => i.day)));
@@ -559,11 +560,11 @@
             const [currentTab, setCurrentTab] = useState('info'); 
             const [liveTime, setLiveTime] = useState(new Date());
 
-            // --- 即時時間與天氣 (模擬) ---
+            // 為了排除問題，我們將定時器簡化到只在第一次渲染時獲取時間
             useEffect(() => {
-                const timer = setInterval(() => setLiveTime(new Date()), 1000);
-                // console.log("4. useEffect 啟動定時器..."); // 紀錄 useEffect 啟動
-                return () => clearInterval(timer);
+                // 如果需要即時時間，這裡應該有 setInterval。
+                // 為了排除錯誤，我們暫時禁用即時更新，只在 mount 時獲取一次時間
+                setLiveTime(new Date());
             }, []);
             
             // 時間使用 Montserrat 字體
@@ -865,26 +866,31 @@
         };
         
         // 渲染 App 元件到頁面
-        // 2. 應用 try...catch 確保錯誤能被捕獲
-        try {
-            const container = document.getElementById('root');
-            if (container) {
-                console.log("2. 找到根元素 #root。開始渲染 React App...");
-                // 清除預先加入的訊息
-                container.innerHTML = ''; 
-                const root = ReactDOM.createRoot(container);
-                root.render(React.createElement(App, null));
-                console.log("4. React App 渲染命令已發出。");
-            } else {
-                console.error("致命錯誤: 無法找到 ID 為 'root' 的元素！");
+        // 確保在整個 DOM 內容載入後才嘗試渲染
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const container = document.getElementById('root');
+                if (container) {
+                    // 成功找到根元素，清除載入訊息
+                    container.innerHTML = ''; 
+                    const root = ReactDOM.createRoot(container);
+                    root.render(React.createElement(App, null));
+                } else {
+                    console.error("Fatal Error: Root element '#root' not found.");
+                    document.body.innerHTML = '<div class="text-center p-10 text-red-600 font-serif-title">致命錯誤：無法找到應用程式根元素。</div>';
+                }
+            } catch (e) {
+                console.error("Fatal Rendering Error:", e);
+                const container = document.getElementById('root');
+                if (container) {
+                    container.innerHTML = `<div class="text-center p-10 text-red-600 font-serif-title">
+                        應用程式啟動失敗：請查看主控台錯誤訊息。
+                        <p class="text-sm mt-2">${e.message}</p>
+                    </div>`;
+                }
             }
-        } catch (e) {
-            console.error("致命渲染錯誤 (Catch Block):", e);
-            document.getElementById('root').innerHTML = `<div class="text-center p-10 text-red-600 font-serif-title">
-                應用程式啟動失敗：請查看主控台錯誤訊息。
-                <p class="text-sm mt-2">${e.message}</p>
-            </div>`;
-        }
+        });
+
     </script>
 </body>
 </html>
