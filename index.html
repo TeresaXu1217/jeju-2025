@@ -13,24 +13,20 @@
     
     <!-- 設定 Tailwind 自訂顏色和字體 -->
     <script>
+        // 設定 Tailwind 配置
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        // 使用者指定顏色
-                        'custom-base': '#FCFAF2',       // 底色 (奶油白)
-                        'custom-primary': '#82663A',    // 文字色 (深棕)
-                        'custom-accent': '#B68E55',     // 強調色 (內斂金)
-                        // 衍生顏色
-                        'custom-light-accent': '#E0DACD', // 較淺的強調色背景/線條
-                        'custom-dark-text': '#5C4E33',    // 用於標題的深色文字
+                        'custom-base': '#FCFAF2',
+                        'custom-primary': '#82663A',
+                        'custom-accent': '#B68E55',
+                        'custom-light-accent': '#E0DACD',
+                        'custom-dark-text': '#5C4E33',
                     },
                     fontFamily: {
-                        // English/System: Montserrat
                         sans: ['Montserrat', 'sans-serif'],
-                        // Chinese Title: Noto Serif TC
                         serif: ['Noto Serif TC', 'serif'],
-                        // Chinese Content: Zen Kaku Gothic New (default is 300-light)
                         content: ['Zen Kaku Gothic New', 'sans-serif'],
                     }
                 }
@@ -39,11 +35,11 @@
     </script>
 
     <style>
-        /* 基礎字體設定：內文使用 Zen Kaku Gothic New 細體 */
+        /* 基礎字體設定 */
         body { 
             font-family: 'Zen Kaku Gothic New', 'Montserrat', sans-serif; 
             color: #82663A; 
-            font-weight: 300; /* 預設使用細體 */
+            font-weight: 300;
         }
         
         /* 針對標題/重要文字覆蓋字體 */
@@ -68,45 +64,35 @@
         /* 隱藏滾動條 */
         .scrollable-planner::-webkit-scrollbar { display: none; }
         .scrollable-planner { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* 簡潔輸入框風格 */
-        input[type="text"], input[type="number"], select, textarea {
-            transition: all 0.2s;
-            border-radius: 4px !important;
-        }
-        .dragging {
-            opacity: 0.5;
-            transform: scale(0.98);
-        }
     </style>
 </head>
 <body class="bg-custom-base min-h-screen">
-    <!-- React 應用程式的根元素 -->
+    <!-- React 應用程式的根元素，預先加入訊息以便除錯 -->
     <div id="root" class="max-w-5xl mx-auto p-0 sm:p-6 lg:p-8">
-        <!-- 應用程式將會渲染在這裡 -->
+        <div class="text-center p-10 font-serif-title text-custom-accent">
+            正在啟動應用程式...（如果此訊息持續顯示，請查看瀏覽器主控台是否有錯誤）
+        </div>
     </div>
     
-    <!-- 載入所有腳本和邏輯 -->
-    <!-- 修正: 確保 react-dom.development.js 路徑正確 -->
+    <!-- 載入核心 React 函式庫 -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- 載入 Babel 轉換器 -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- React 應用程式邏輯 (JSX 寫在 <script> 標籤內) -->
+    <!-- React 應用程式邏輯 (JSX 寫在 <script type="text/babel"> 標籤內) -->
     <script type="text/babel">
+        console.log("1. React/Babel 腳本已載入。開始執行 JSX 代碼...");
+
         const { useState, useEffect, useMemo } = React;
 
         // --- Firebase/API 相關變數 ---
-        // 這是用於 Gemini API 呼叫的佔位符，不需要實際金鑰即可運行。
         const apiKey = ""; 
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
         // --- 靜態配置與資料 ---
-
-        // 用戶提供的圖片佔位符 (請用 Base64 數據替換)
-        const FLIGHT_IMAGE_TAIPEI_JEJU = "https://placehold.co/600x250/E0DACD/5C4E33?text=台北→濟州機票圖片+(建議尺寸:600x250)";
-        const FLIGHT_IMAGE_JEJU_TAIPEI = "https://placehold.co/600x250/E0DACD/5C4E33?text=濟州→台北機票圖片+(建議尺寸:600x250)";
-
+        const FLIGHT_IMAGE_TAIPEI_JEJU = "https://placehold.co/600x250/E0DACD/5C4E33?text=台北→濟州機票圖片";
+        const FLIGHT_IMAGE_JEJU_TAIPEI = "https://placehold.co/600x250/E0DACD/5C4E33?text=濟州→台北機票圖片";
 
         const CATEGORY_MAP = {
             main: { label: '主要景點路線', icon: '📍', color: 'text-custom-accent' },
@@ -120,26 +106,19 @@
             // Day 1: 12/04 (Thursday)
             { id: 101, day: 1, date: '12/04 週四', category: 'transport', time: '07:00', location: '濟州國際機場 → Jeju AutoHouse', notes: "抵達、取車，接駁車服務", naverMap: 'https://map.naver.com/p/search/Jeju%20AutoHouse', searchData: null, officialLink: null },
             { id: 102, day: 1, date: '12/04 週四', category: 'main', time: '10:00', location: '城山日出峰 (Seongsan Ilchulbong)', notes: "世界自然遺產，經典景點", naverMap: 'https://map.naver.com/p/entry/place/11516281', searchData: null, officialLink: null },
+            // ... (其餘行程數據保持不變，為節省空間在註釋中省略)
             { id: 103, day: 1, date: '12/04 週四', category: 'food', time: '13:00', location: '海女之家 (Haenyeo House)', notes: "午餐：新鮮海膽湯、鮑魚粥", naverMap: 'https://map.naver.com/p/search/해녀의집', searchData: null, officialLink: null },
             { id: 104, day: 1, date: '12/04 週四', category: 'main', time: '15:30', location: '涉地岬 (Seopjikoji)', notes: "海岸線步道、燈塔、韓劇場景", naverMap: 'https://map.naver.com/p/entry/place/13361405', searchData: null, officialLink: null },
             { id: 105, day: 1, date: '12/04 週四', category: 'transport', time: '18:00', location: '第一間住宿 (Aewol Coastal-ro 21104)', notes: "入住，準備晚餐", naverMap: 'https://map.naver.com/p/search/Jeju%20Island%20Jeju-si%20Aewol%20Coastal-ro%2021104', searchData: null, officialLink: null },
-            
-            // Day 2: 12/05 (Friday)
             { id: 201, day: 2, date: '12/05 週五', category: 'main', time: '09:00', location: '山茶花之丘 (Camellia Hill)', notes: "賞花拍照聖地，12月是冬柏花季", naverMap: 'https://map.naver.com/p/entry/place/13158066', searchData: null, officialLink: 'http://www.camelliahill.co.kr/' },
-            { id: 202, day: 2, date: '12/05 週五', category: 'food', time: '13:00', location: '西歸浦每日偶來市場', notes: "午餐：當地小吃、橘子果汁、黑豬肉串", naverMap: 'https://map.naver.com/p/entry/place/11624534', searchData: null, officialLink: null },
+            { id: 202, day: 2, date: '13:00', category: 'food', time: '13:00', location: '西歸浦每日偶來市場', notes: "午餐：當地小吃、橘子果汁、黑豬肉串", naverMap: 'https://map.naver.com/p/entry/place/11624534', searchData: null, officialLink: null },
             { id: 203, day: 2, date: '12/05 週五', category: 'main', time: '16:00', location: '天帝淵瀑布', notes: "西歸浦區三大瀑布之一", naverMap: 'https://map.naver.com/p/entry/place/11624898', searchData: null, officialLink: null },
             { id: 204, day: 2, date: '12/05 週五', category: 'transport', time: '18:00', location: 'Heyy Seogwipo Hotel', notes: "入住第二間住宿", naverMap: 'https://map.naver.com/p/entry/place/1639869302', searchData: null, officialLink: null },
-
-            // Day 3: 12/06 (Saturday) - 簡略
             { id: 301, day: 3, date: '12/06 週六', category: 'main', time: '10:00', location: '獨立岩 (Oedolgae)', notes: "孤獨的巨石，海邊漫步", naverMap: 'https://map.naver.com/p/entry/place/13444408', searchData: null, officialLink: null },
             { id: 302, day: 3, date: '12/06 週六', category: 'food', time: '13:00', location: '東門市場 (晚餐)', notes: "晚上來逛，夜市美食", naverMap: 'https://map.naver.com/p/entry/place/11620958', searchData: null, officialLink: null },
             { id: 303, day: 3, date: '12/06 週六', category: 'transport', time: '16:00', location: '濟州機場-Urbanstay', notes: "入住第三間住宿", naverMap: 'https://naver.me/5S9zc50f', searchData: null, officialLink: null },
-
-            // Day 4: 12/07 (Sunday) - 爬山準備日
             { id: 401, day: 4, date: '12/07 週日', category: 'main', time: '14:00', location: '涯月邑 (Aewol)', notes: "咖啡街、海邊景色", naverMap: 'https://map.naver.com/p/search/애월읍', searchData: null, officialLink: null },
             { id: 402, day: 4, date: '12/07 週日', category: 'transport', time: '19:00', location: 'Oshare 裝備租借', notes: "領取漢拏山登山裝備", naverMap: 'https://map.naver.com/p/search/oshare.kr', searchData: null, officialLink: 'https://oshare.kr' },
-
-            // Day 5: 12/08 (Monday) - 漢拏山與返程
             { id: 501, day: 5, date: '12/08 週一', category: 'main', time: '07:00', location: '漢拏山 (御里牧上，靈室下)', notes: "本次行程重點：登山活動", naverMap: 'https://map.naver.com/p/search/한라산', searchData: null, officialLink: null },
             { id: 502, day: 5, date: '12/08 週一', category: 'transport', time: '20:00', location: 'Jeju AutoHouse', notes: "還車 (注意時間：20:00前)", naverMap: 'https://map.naver.com/p/search/Jeju%20AutoHouse', searchData: null, officialLink: null },
             { id: 503, day: 5, date: '12/08 週一', category: 'transport', time: '22:15', location: '濟州國際機場 (返程)', notes: "飛機起飛", naverMap: 'https://map.naver.com/p/search/제주국제공항', searchData: null, officialLink: null },
@@ -300,13 +279,18 @@
 
             const handleDropOnListEnd = (e) => {
                 e.preventDefault();
-                if (dayItems.length > 0) return; // Only allow drop on empty list end
-
+                // 處理從其他天數拖曳到空列表或末尾
                 const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
-                const draggedItem = MOCK_DAILY_ITINERARY.find(i => i.id === draggedItemId);
-                
-                if (draggedItem) {
-                    onUpdateOrder(day, [draggedItem]);
+                const draggedItem = MOCK_DAILY_ITINERARY.find(i => i.id === draggedItemId); // 這裡需要全域項目列表來查找
+
+                if (draggedItem && !dayItems.some(i => i.id === draggedItemId)) {
+                    // 如果拖曳的項目不在當前列表中 (即從另一天拖過來)
+                    // 為了簡化，我們假設 onUpdateOrder 會處理全域狀態的更新
+                    const newItems = [...dayItems, {...draggedItem, day: day}];
+                    onUpdateOrder(day, newItems);
+                } else if (dayItems.length === 0) {
+                     // 這是從外部拖曳到空列表的情況
+                    // 由於我們只在同一天內進行排序，跨天拖曳需要更複雜的狀態管理，這裡僅作為排序的拖曳目標。
                 }
             };
 
@@ -390,9 +374,7 @@
                     
                     {/* 1. 航班機票 */}
                     <InfoCard title="航班機票" icon="🎫">
-                        {/* 圖片區域 (Base64) */}
                         <div className="flex flex-col md:flex-row gap-4">
-                            {/* 請替換為您的 Base64 圖片 */}
                             <img src={FLIGHT_IMAGE_TAIPEI_JEJU} alt="台北到濟州機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm border border-custom-light-accent" />
                             <img src={FLIGHT_IMAGE_JEJU_TAIPEI} alt="濟州到台北機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm border border-custom-light-accent" />
                         </div>
@@ -567,20 +549,23 @@
 
         // --- 核心組件：App ---
         const App = () => {
+            // console.log("3. App 元件啟動..."); // 紀錄 App 啟動
             const [itinerary, setItinerary] = useState(MOCK_DAILY_ITINERARY);
             const [newLocation, setNewLocation] = useState('');
             const [newDay, setNewDay] = useState(Math.max(1, ...MOCK_DAILY_ITINERARY.map(i => i.day)));
             const [newNotes, setNewNotes] = useState('');
             const [newCategory, setNewCategory] = useState('main');
             const [nextId, setNextId] = useState(Math.max(...MOCK_DAILY_ITINERARY.map(i => i.id)) + 1 || 1);
-            const [currentTab, setCurrentTab] = useState('info'); // 預設 Tab 1
+            const [currentTab, setCurrentTab] = useState('info'); 
             const [liveTime, setLiveTime] = useState(new Date());
 
             // --- 即時時間與天氣 (模擬) ---
             useEffect(() => {
                 const timer = setInterval(() => setLiveTime(new Date()), 1000);
+                // console.log("4. useEffect 啟動定時器..."); // 紀錄 useEffect 啟動
                 return () => clearInterval(timer);
             }, []);
+            
             // 時間使用 Montserrat 字體
             const formattedTime = liveTime.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
             const weather = { location: "濟州市", temp: "18°C", conditions: "多雲/風強", advice: "今日海邊風大，建議穿著防風外套。" };
@@ -690,7 +675,6 @@
 
             const groupedItinerary = useMemo(() => itinerary.reduce((acc, item) => {
                 (acc[item.day] = acc[item.day] || []).push(item);
-                // 確保每個 day 內的 items 是排序好的 (雖然整體會在 sortItinerary 執行，但這裡保留單日排序邏輯)
                 acc[item.day].sort((a, b) => a.time.localeCompare(b.time));
                 return acc;
             }, {}), [itinerary]);
@@ -881,9 +865,26 @@
         };
         
         // 渲染 App 元件到頁面
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(React.createElement(App, null));
+        // 2. 應用 try...catch 確保錯誤能被捕獲
+        try {
+            const container = document.getElementById('root');
+            if (container) {
+                console.log("2. 找到根元素 #root。開始渲染 React App...");
+                // 清除預先加入的訊息
+                container.innerHTML = ''; 
+                const root = ReactDOM.createRoot(container);
+                root.render(React.createElement(App, null));
+                console.log("4. React App 渲染命令已發出。");
+            } else {
+                console.error("致命錯誤: 無法找到 ID 為 'root' 的元素！");
+            }
+        } catch (e) {
+            console.error("致命渲染錯誤 (Catch Block):", e);
+            document.getElementById('root').innerHTML = `<div class="text-center p-10 text-red-600 font-serif-title">
+                應用程式啟動失敗：請查看主控台錯誤訊息。
+                <p class="text-sm mt-2">${e.message}</p>
+            </div>`;
+        }
     </script>
 </body>
 </html>
