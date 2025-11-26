@@ -74,6 +74,10 @@
             transition: all 0.2s;
             border-radius: 4px !important;
         }
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body class="bg-custom-base min-h-screen">
@@ -83,6 +87,7 @@
     </div>
     
     <!-- 載入所有腳本和邏輯 -->
+    <!-- 修正: 確保 react-dom.development.js 路徑正確 -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -92,6 +97,7 @@
         const { useState, useEffect, useMemo } = React;
 
         // --- Firebase/API 相關變數 ---
+        // 這是用於 Gemini API 呼叫的佔位符，不需要實際金鑰即可運行。
         const apiKey = ""; 
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
@@ -156,7 +162,7 @@
         };
 
         // --- 核心組件：單一卡片項目 ---
-        const ScheduleItem = ({ item, index, isCurrent, onUpdateOrder, onDelete, onSearchGuide }) => {
+        const ScheduleItem = ({ item, index, isCurrent, onDelete, onSearchGuide, onDropItem }) => {
             const typeInfo = CATEGORY_MAP[item.category] || CATEGORY_MAP.main;
             
             const NaverMapButton = ({ mapUrl }) => (
@@ -195,16 +201,6 @@
                 );
             };
 
-            const handleDrop = (e) => {
-                e.preventDefault();
-                e.target.classList.remove('dragging-over');
-
-                const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
-                const draggedItem = item.dayItems.find(i => i.id === draggedItemId);
-                
-                if (!draggedItem || draggedItem.id === item.id) return;
-            };
-            
             const currentItemClasses = isCurrent ? "border-l-4 border-l-red-500 bg-red-50/50 shadow-md" : "border-l-4 border-l-custom-light-accent hover:bg-gray-50";
 
 
@@ -214,7 +210,7 @@
                     draggable="true" 
                     onDragStart={(e) => handleDragStart(e, item)}
                     onDragOver={handleDragOver}
-                    onDrop={handleDrop}
+                    onDrop={(e) => onDropItem(e, item)}
                     onDragEnd={handleDragEnd}
                     className={`cursor-grab p-5 transition duration-150 ${currentItemClasses} border-b border-custom-light-accent`}
                 >
@@ -283,23 +279,35 @@
 
 
         // --- 核心組件：單日行程列表 (可拖曳排序) ---
-        const DayPlanner = ({ day, dayItems, onUpdateOrder, onDelete, onSearchGuide }) => {
+        const DayPlanner = ({ day, dayItems, onUpdateOrder, onDelete, onSearchGuide, onDeleteItem }) => {
             const handleDrop = (e, targetItem) => {
                 e.preventDefault();
                 const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
                 
                 if (draggedItemId === targetItem.id) return;
                 
-                const draggedIndex = dayItems.findIndex(item => item.id === draggedItemId);
-                const targetIndex = dayItems.findIndex(item => item.id === targetItem.id);
+                const draggedItemIndex = dayItems.findIndex(i => i.id === draggedItemId);
+                const targetIndex = dayItems.findIndex(i => i.id === targetItem.id);
                 
-                if (draggedIndex === -1 || targetIndex === -1) return;
+                if (draggedItemIndex === -1 || targetIndex === -1) return;
 
                 const newItems = [...dayItems];
-                const [removed] = newItems.splice(draggedIndex, 1);
+                const [removed] = newItems.splice(draggedItemIndex, 1);
                 newItems.splice(targetIndex, 0, removed);
                 
                 onUpdateOrder(day, newItems);
+            };
+
+            const handleDropOnListEnd = (e) => {
+                e.preventDefault();
+                if (dayItems.length > 0) return; // Only allow drop on empty list end
+
+                const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
+                const draggedItem = MOCK_DAILY_ITINERARY.find(i => i.id === draggedItemId);
+                
+                if (draggedItem) {
+                    onUpdateOrder(day, [draggedItem]);
+                }
             };
 
 
@@ -318,20 +326,26 @@
                     {/* 行程列表 */}
                     <ul className="divide-y divide-custom-light-accent">
                         {dayItems.map((item, index) => (
-                            <li 
+                            <ScheduleItem 
                                 key={item.id} 
-                                onDragOver={(e) => e.preventDefault()}
-                                onDrop={(e) => handleDrop(e, item)}
-                            >
-                                <ScheduleItem 
-                                    item={item} 
-                                    index={index}
-                                    isCurrent={false} /* 實際應用中需根據時間判斷 */
-                                    onDelete={onDeleteItem} 
-                                    onSearchGuide={onSearchGuide}
-                                />
-                            </li>
+                                item={item} 
+                                index={index}
+                                isCurrent={false}
+                                onDelete={onDeleteItem} 
+                                onSearchGuide={onSearchGuide}
+                                onDropItem={handleDrop}
+                            />
                         ))}
+                         {/* 處理空列表拖曳目標 */}
+                        {dayItems.length === 0 && (
+                            <li 
+                                onDragOver={handleDragOver}
+                                onDrop={handleDropOnListEnd}
+                                className="p-10 text-center text-gray-400 italic bg-gray-50/50"
+                            >
+                                將行程項目拖曳到此處...
+                            </li>
+                        )}
                     </ul>
                 </div>
             );
@@ -378,6 +392,7 @@
                     <InfoCard title="航班機票" icon="🎫">
                         {/* 圖片區域 (Base64) */}
                         <div className="flex flex-col md:flex-row gap-4">
+                            {/* 請替換為您的 Base64 圖片 */}
                             <img src={FLIGHT_IMAGE_TAIPEI_JEJU} alt="台北到濟州機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm border border-custom-light-accent" />
                             <img src={FLIGHT_IMAGE_JEJU_TAIPEI} alt="濟州到台北機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm border border-custom-light-accent" />
                         </div>
@@ -557,7 +572,7 @@
             const [newDay, setNewDay] = useState(Math.max(1, ...MOCK_DAILY_ITINERARY.map(i => i.day)));
             const [newNotes, setNewNotes] = useState('');
             const [newCategory, setNewCategory] = useState('main');
-            const [nextId, setNextId] = useState(MOCK_DAILY_ITINERARY.length + 1);
+            const [nextId, setNextId] = useState(Math.max(...MOCK_DAILY_ITINERARY.map(i => i.id)) + 1 || 1);
             const [currentTab, setCurrentTab] = useState('info'); // 預設 Tab 1
             const [liveTime, setLiveTime] = useState(new Date());
 
@@ -572,6 +587,14 @@
 
 
             // --- 行程操作邏輯 ---
+            
+            // 排序器：按天數排序，如果天數相同，則按時間排序
+            const sortItinerary = (items) => items.sort((a, b) => {
+                if (a.day !== b.day) return a.day - b.day;
+                // 假設時間格式為 HH:MM
+                return a.time.localeCompare(b.time);
+            });
+
 
             const handleAddItem = (e) => {
                 e.preventDefault();
@@ -590,9 +613,10 @@
                     officialLink: null,
                 };
                 
-                setItinerary([...itinerary, newItem].sort((a, b) => a.day - b.day || a.time.localeCompare(b.time)));
+                setItinerary(sortItinerary([...itinerary, newItem]));
                 setNextId(nextId + 1);
                 
+                // 重置表單
                 setNewLocation('');
                 setNewNotes('');
                 setNewDay(Math.max(1, ...itinerary.map(i => i.day)));
@@ -605,8 +629,8 @@
 
             const handleUpdateOrder = (day, newDayItems) => {
                 const otherItems = itinerary.filter(item => item.day !== day);
-                // 重新設置 item 順序時，保持其他項目不變
-                setItinerary([...otherItems, ...newDayItems].sort((a, b) => a.day - b.day || a.time.localeCompare(b.time)));
+                const updatedItems = [...otherItems, ...newDayItems];
+                setItinerary(sortItinerary(updatedItems));
             };
             
             // --- 導遊搜尋功能 (串接 Google Search Tool) ---
@@ -616,7 +640,7 @@
                 
                 try {
                     // 1. 設置載入狀態
-                    setItinerary(itinerary.map(item => 
+                    setItinerary(prev => prev.map(item => 
                         item.id === itemId ? { ...item, searchData: { text: "🔍 正在搜尋攻略中...", title: "載入中" } } : item
                     ));
                     
@@ -650,13 +674,13 @@
                     }
                     
                     // 2. 更新 state
-                    setItinerary(itinerary.map(item => 
+                    setItinerary(prev => prev.map(item => 
                         item.id === itemId ? { ...item, searchData: { text: fetchedText, title: fetchedTitle, uri: fetchedUri } } : item
                     ));
 
                 } catch (error) {
                     console.error("Guide Search Error:", error);
-                    setItinerary(itinerary.map(item => 
+                    setItinerary(prev => prev.map(item => 
                         item.id === itemId ? { ...item, searchData: { text: "❌ 搜尋失敗，請檢查網絡或 API 設定。", title: "錯誤" } } : item
                     ));
                 }
@@ -666,7 +690,7 @@
 
             const groupedItinerary = useMemo(() => itinerary.reduce((acc, item) => {
                 (acc[item.day] = acc[item.day] || []).push(item);
-                // 確保每個 day 內的 items 是排序好的
+                // 確保每個 day 內的 items 是排序好的 (雖然整體會在 sortItinerary 執行，但這裡保留單日排序邏輯)
                 acc[item.day].sort((a, b) => a.time.localeCompare(b.time));
                 return acc;
             }, {}), [itinerary]);
@@ -826,8 +850,8 @@
                                                 day={day} 
                                                 dayItems={groupedItinerary[day]} 
                                                 onUpdateOrder={handleUpdateOrder}
-                                                onDelete={handleDeleteItem}
                                                 onSearchGuide={handleSearchGuide}
+                                                onDeleteItem={handleDeleteItem}
                                             />
                                         ))
                                     )}
