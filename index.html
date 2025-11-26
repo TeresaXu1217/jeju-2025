@@ -14,16 +14,15 @@
                 extend: {
                     colors: {
                         // 使用者指定顏色
-                        'custom-base': '#FCFAF2',
-                        'custom-primary': '#82663A',
-                        'custom-accent': '#B68E55',
+                        'custom-base': '#FCFAF2',       // 底色 (奶油白)
+                        'custom-primary': '#82663A',    // 文字色 (深棕)
+                        'custom-accent': '#B68E55',     // 強調色 (內斂金)
                         // 衍生顏色
-                        'custom-light-accent': '#E0DACD', // 較淺的強調色背景
-                        'custom-dark-text': '#5C4E33', // 用於標題的深色文字
-                        // 卡片類型背景 ( Subtle differentiation )
-                        'card-sight-bg': '#F6F4EB',  // 景點
-                        'card-food-bg': '#FFFBF5',   // 美食
-                        'card-transport-bg': '#F9F9F9', // 交通
+                        'custom-light-accent': '#E0DACD', // 較淺的強調色背景/線條
+                        'custom-dark-text': '#5C4E33',    // 用於標題的深色文字
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
                     }
                 }
             }
@@ -33,22 +32,31 @@
     <style>
         /* 確保字體和基本顯示 */
         body { 
-            font-family: 'Inter', sans-serif; 
-            color: #82663A; /* 預設文字顏色 */
+            font-family: 'Inter', 'Noto Sans TC', sans-serif; 
+            color: #82663A; 
         }
-        /* 隱藏拖曳時的瀏覽器預設圖片 */
+        /* 實現 iok.site 簡約風格的線條分隔 */
+        .info-card {
+            border-top: 1px solid #E0DACD; /* 淺強調色線條 */
+        }
+        .info-card:first-child {
+            border-top: none;
+        }
+        /* 隱藏原生滾動條，使用自訂樣式 */
+        .scrollable-planner::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollable-planner {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* 讓拖曳物件半透明 */
         .dragging { opacity: 0.5; }
 
-        /* Custom Scrollbar for Day Planner */
-        .scrollable-planner::-webkit-scrollbar {
-            width: 8px;
-        }
-        .scrollable-planner::-webkit-scrollbar-thumb {
-            background-color: #E0DACD; /* 淺強調色 */
-            border-radius: 4px;
-        }
-        .scrollable-planner::-webkit-scrollbar-track {
-            background: #FCFAF2;
+        /* Custom input style for elegant look */
+        input[type="text"], input[type="number"], select, textarea {
+            transition: all 0.2s;
+            border-radius: 8px !important;
         }
     </style>
 </head>
@@ -65,106 +73,104 @@
 
     <!-- React 應用程式邏輯 (JSX 寫在 <script> 標籤內) -->
     <script type="text/babel">
-        const { useState, useEffect, useCallback, useMemo } = React;
+        const { useState, useEffect, useMemo } = React;
 
         // --- Firebase/API 相關變數 (確保在 Canvas 環境中運行) ---
         const apiKey = ""; 
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-        // --- 靜態配置與輔助函式 ---
+        // --- 靜態配置與資料 ---
 
-        const STATUS_OPTIONS = [
-            // 重新設計狀態顏色，以符合新的配色方案
-            { value: 'pending', label: '未開始', color: 'bg-custom-light-accent text-custom-dark-text border-custom-accent' },
-            { value: 'in_progress', label: '進行中', color: 'bg-custom-accent text-white border-custom-accent' },
-            { value: 'completed', label: '已完成', color: 'bg-gray-200 text-gray-500 border-gray-400' },
-        ];
-        
-        const TYPE_OPTIONS = {
-            // 使用自訂的背景色和強調邊框
-            sight: { label: '景點', icon: '⛰️', bgColor: 'bg-card-sight-bg', borderColor: 'border-custom-accent' },
-            food: { label: '餐廳/美食', icon: '🍽️', bgColor: 'bg-card-food-bg', borderColor: 'border-custom-accent' },
-            transport: { label: '交通/住宿', icon: '✈️', bgColor: 'bg-card-transport-bg', borderColor: 'border-custom-accent' },
+        // 用戶提供的圖片佔位符 (請用 Base64 數據替換)
+        const FLIGHT_IMAGE_TAIPEI_JEJU = "https://placehold.co/400x150/E0DACD/82663A?text=台北→濟州機票圖片";
+        const FLIGHT_IMAGE_JEJU_TAIPEI = "https://placehold.co/400x150/E0DACD/82663A?text=濟州→台北機票圖片";
+
+
+        const CATEGORY_MAP = {
+            main: { label: '主要景點路線', icon: '📍', color: 'text-custom-accent' },
+            food: { label: '附近美食', icon: '🍜', color: 'text-orange-500' },
+            coffee: { label: '甜點/咖啡', icon: '☕', color: 'text-indigo-500' },
+            alternative: { label: '備選景點', icon: '💡', color: 'text-gray-500' },
+            transport: { label: '交通', icon: '🚗', color: 'text-green-500' },
         };
 
-        const initialItinerary = [
-            { id: 1, day: 1, type: 'transport', location: "濟州國際機場 (Jeju International Airport)", notes: "租車，前往濟州市區酒店", status: 'completed', searchData: null },
-            { id: 2, day: 1, type: 'food', location: "東門市場", notes: "品嚐黑豬肉串和當地小吃", status: 'in_progress', searchData: null },
-            { id: 3, day: 2, type: 'sight', location: "城山日出峰", notes: "清晨爬山觀日出", status: 'pending', searchData: null },
-            { id: 4, day: 2, type: 'sight', location: "涉地岬 (Seopjikoji)", notes: "海岸散步與燈塔", status: 'pending', searchData: null },
+        const MOCK_DAILY_ITINERARY = [
+            // Day 1: 12/04 (Thursday)
+            { id: 101, day: 1, date: '12/04 週四', category: 'transport', time: '07:00', location: '濟州國際機場 (Jeju International Airport) -> Jeju AutoHouse', notes: "抵達、取車，接駁車服務", naverMap: 'https://map.naver.com/p/search/Jeju%20AutoHouse', searchData: null, officialLink: null },
+            { id: 102, day: 1, date: '12/04 週四', category: 'main', time: '10:00', location: '城山日出峰 (Seongsan Ilchulbong)', notes: "世界自然遺產，經典景點", naverMap: 'https://map.naver.com/p/entry/place/11516281', searchData: null, officialLink: null },
+            { id: 103, day: 1, date: '12/04 週四', category: 'food', time: '13:00', location: '海女之家 (Haenyeo House) (城山店)', notes: "午餐：新鮮海膽湯、鮑魚粥", naverMap: 'https://map.naver.com/p/search/해녀의집', searchData: null, officialLink: null },
+            { id: 104, day: 1, date: '12/04 週四', category: 'main', time: '15:30', location: '涉地岬 (Seopjikoji)', notes: "海岸線步道、燈塔、韓劇場景", naverMap: 'https://map.naver.com/p/entry/place/13361405', searchData: null, officialLink: null },
+            { id: 105, day: 1, date: '12/04 週四', category: 'transport', time: '18:00', location: '第一間住宿 (Aewol Coastal-ro 21104)', notes: "入住，準備晚餐", naverMap: 'https://map.naver.com/p/search/Jeju%20Island%20Jeju-si%20Aewol%20Coastal-ro%2021104', searchData: null, officialLink: null },
+            
+            // Day 2: 12/05 (Friday)
+            { id: 201, day: 2, date: '12/05 週五', category: 'main', time: '09:00', location: '山茶花之丘 (Camellia Hill)', notes: "賞花拍照聖地，12月是冬柏花季", naverMap: 'https://map.naver.com/p/entry/place/13158066', searchData: null, officialLink: 'http://www.camelliahill.co.kr/' },
+            { id: 202, day: 2, date: '12/05 週五', category: 'food', time: '13:00', location: '西歸浦每日偶來市場', notes: "午餐：當地小吃、橘子果汁、黑豬肉串", naverMap: 'https://map.naver.com/p/entry/place/11624534', searchData: null, officialLink: null },
+            { id: 203, day: 2, date: '12/05 週五', category: 'main', time: '16:00', location: '天帝淵瀑布', notes: "西歸浦區三大瀑布之一", naverMap: 'https://map.naver.com/p/entry/place/11624898', searchData: null, officialLink: null },
+            { id: 204, day: 2, date: '12/05 週五', category: 'transport', time: '18:00', location: 'Heyy Seogwipo Hotel', notes: "入住第二間住宿", naverMap: 'https://map.naver.com/p/entry/place/1639869302', searchData: null, officialLink: null },
+
+            // Day 3: 12/06 (Saturday) - 簡略
+            { id: 301, day: 3, date: '12/06 週六', category: 'main', time: '10:00', location: '獨立岩 (Oedolgae)', notes: "孤獨的巨石，海邊漫步", naverMap: 'https://map.naver.com/p/entry/place/13444408', searchData: null, officialLink: null },
+            { id: 302, day: 3, date: '12/06 週六', category: 'food', time: '13:00', location: '東門市場 (晚餐)', notes: "晚上來逛，夜市美食", naverMap: 'https://map.naver.com/p/entry/place/11620958', searchData: null, officialLink: null },
+            { id: 303, day: 3, date: '12/06 週六', category: 'transport', time: '16:00', location: '濟州機場-Urbanstay', notes: "入住第三間住宿", naverMap: 'https://naver.me/5S9zc50f', searchData: null, officialLink: null },
+
+            // Day 4: 12/07 (Sunday) - 爬山準備日
+            { id: 401, day: 4, date: '12/07 週日', category: 'main', time: '14:00', location: '涯月邑 (Aewol)', notes: "咖啡街、海邊景色", naverMap: 'https://map.naver.com/p/search/애월읍', searchData: null, officialLink: null },
+            { id: 402, day: 4, date: '12/07 週日', category: 'transport', time: '19:00', location: 'Oshare 裝備租借', notes: "領取漢拏山登山裝備", naverMap: 'https://map.naver.com/p/search/oshare.kr', searchData: null, officialLink: 'https://oshare.kr' },
+
+            // Day 5: 12/08 (Monday) - 漢拏山與返程
+            { id: 501, day: 5, date: '12/08 週一', category: 'main', time: '07:00', location: '漢拏山 (御里牧上，靈室下)', notes: "本次行程重點：登山活動", naverMap: 'https://map.naver.com/p/search/한라산', searchData: null, officialLink: null },
+            { id: 502, day: 5, date: '12/08 週一', category: 'transport', time: '20:00', location: 'Jeju AutoHouse', notes: "還車 (注意時間：20:00前)", naverMap: 'https://map.naver.com/p/search/Jeju%20AutoHouse', searchData: null, officialLink: null },
+            { id: 503, day: 5, date: '12/08 週一', category: 'transport', time: '22:15', location: '濟州國際機場 (返程)', notes: "飛機起飛", naverMap: 'https://map.naver.com/p/search/제주국제공항', searchData: null, officialLink: null },
         ];
+
 
         // --- 拖曳排序邏輯 (DayPlanner 內部使用) ---
 
         const handleDragStart = (e, item) => {
             e.dataTransfer.setData("itemId", item.id);
-            // 讓拖曳元素看起來半透明
             setTimeout(() => e.target.classList.add('dragging'), 0);
         };
 
         const handleDragOver = (e) => {
-            e.preventDefault(); // 允許放下
+            e.preventDefault(); 
         };
         
         const handleDragEnd = (e) => {
             e.target.classList.remove('dragging');
         };
 
-        // --- 核心組件：單日行程列表 ---
-        const DayPlanner = ({ day, dayItems, onUpdateOrder, onDelete, onStatusChange, onSearchGuide }) => {
-            const handleDrop = (e, targetItem) => {
-                e.preventDefault();
-                e.target.classList.remove('dragging-over');
-
-                const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
-                const draggedItem = dayItems.find(item => item.id === draggedItemId);
-                
-                if (!draggedItem || draggedItem.id === targetItem.id) return;
-                
-                // 重新排序
-                const newItems = dayItems.filter(item => item.id !== draggedItemId);
-                const targetIndex = newItems.findIndex(item => item.id === targetItem.id);
-                
-                // 插入被拖曳的項目
-                newItems.splice(targetIndex, 0, draggedItem);
-                
-                onUpdateOrder(day, newItems);
-            };
-
-            const NaverMapButton = ({ location }) => (
+        // --- 核心組件：單一卡片項目 ---
+        const ScheduleItem = ({ item, index, isCurrent, onUpdateOrder, onDelete, onSearchGuide }) => {
+            const typeInfo = CATEGORY_MAP[item.category] || CATEGORY_MAP.main;
+            
+            const NaverMapButton = ({ location, mapUrl }) => (
                 <a
-                    href={`https://map.naver.com/p/search/${location}`}
+                    href={mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-custom-accent hover:bg-custom-primary text-white text-xs font-bold py-1 px-2 rounded-lg transition duration-200 shadow-sm flex items-center transform hover:scale-[1.05]"
+                    className="flex items-center text-custom-accent hover:text-custom-dark-text text-xs font-semibold transition duration-200 border border-custom-accent/50 rounded-full px-3 py-1 bg-white hover:bg-custom-light-accent transform hover:scale-[1.03]"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
-                    導航
+                    Naver導航
                 </a>
             );
 
             const GuideDataDisplay = ({ data }) => {
                 if (!data || !data.text) return null;
                 
-                // 關鍵字亮顯 (使用深紅色來強調重要資訊，與主題色搭配)
                 let text = data.text || "";
-                const highlights = ["必吃美食", "必點菜單", "必買伴手禮", "重要預約代號", "營業時間", "交通方式"];
-
-                highlights.forEach(keyword => {
-                    const regex = new RegExp(`(${keyword})`, 'g');
-                    // 使用 <b class="text-red-700 bg-red-100 p-0.5 rounded"> 來亮顯關鍵字
-                    text = text.replace(regex, `<b class="text-red-700 bg-red-100 p-0.5 rounded">${keyword}</b>`);
-                });
-
+                
+                // 為了讓文字更符合 iok.site 的簡約風格，強調色只用在連結或重要標題上
                 return (
-                    <div className="mt-4 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                        <p className="text-sm font-semibold text-custom-dark-text mb-2 border-b border-dashed pb-1">導遊分析：{data.title}</p>
-                        {/* 使用 dangerouslySetInnerHTML 渲染帶有亮顯的文字 */}
+                    <div className="mt-4 p-4 bg-gray-50/50 border-t border-custom-light-accent rounded-b-xl">
+                        <p className="text-sm font-semibold text-custom-dark-text mb-2 border-b border-dashed pb-1">
+                            {data.title ? `導遊分析: ${data.title}` : '導遊攻略'}
+                        </p>
                         <p className="text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: text }} />
                         {data.uri && (
-                            <a href={data.uri} target="_blank" rel="noopener noreferrer" className="text-xs text-custom-accent hover:underline mt-2 block">
+                            <a href={data.uri} target="_blank" rel="noopener noreferrer" className="text-xs text-custom-accent hover:underline mt-2 block font-medium">
                                 來源連結
                             </a>
                         )}
@@ -172,120 +178,377 @@
                 );
             };
 
+            const handleDrop = (e) => {
+                e.preventDefault();
+                e.target.classList.remove('dragging-over');
+
+                const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
+                const draggedItem = item.dayItems.find(i => i.id === draggedItemId);
+                
+                if (!draggedItem || draggedItem.id === item.id) return;
+                
+                // 執行父組件的排序邏輯 (這裡需要傳遞給 DayPlanner，但為了單元化，我們直接在 DayPlanner 處理)
+                // 這裡僅處理拖曳視覺效果
+            };
+            
+            const currentItemClasses = isCurrent ? "border-l-4 border-l-red-500 bg-red-50/50 shadow-md" : "border-l-4 border-l-custom-light-accent hover:bg-gray-50";
+
+
             return (
-                <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-                    {/* 天數標題 - 使用淺底色和深文字，更像網站風格 */}
-                    <div className="bg-custom-light-accent text-custom-dark-text p-4 border-b border-custom-accent/50 flex justify-between items-center">
+                <li 
+                    key={item.id} 
+                    draggable="true" // 啟用拖曳
+                    onDragStart={(e) => handleDragStart(e, item)}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
+                    className={`cursor-grab p-5 transition duration-150 ${currentItemClasses} border-b border-custom-light-accent`}
+                >
+                    <div className="flex flex-col sm:flex-row justify-between items-start w-full">
+                        <div className="flex-1 min-w-0 pr-4 space-y-2">
+                            <div className="flex items-center space-x-3">
+                                {/* 時間和類別標籤 */}
+                                <span className="text-sm font-bold text-custom-dark-text border-r border-custom-light-accent pr-3">{item.time}</span>
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color} bg-custom-light-accent/50`}>
+                                    {typeInfo.icon} {typeInfo.label}
+                                </span>
+                            </div>
+                            {/* 地點名稱 */}
+                            <h3 className="text-xl font-extrabold text-custom-dark-text leading-tight">
+                                {item.location}
+                                {isCurrent && <span className="ml-2 text-sm text-red-500">(現在)</span>}
+                            </h3>
+                            {item.notes && (
+                                <p className="text-sm italic text-gray-700">
+                                    {item.notes}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="flex flex-wrap space-x-2 mt-4 sm:mt-0 items-center justify-end flex-shrink-0">
+                            
+                            {/* 導航按鈕 */}
+                            {item.naverMap && <NaverMapButton location={item.location} mapUrl={item.naverMap} />}
+
+                            {/* 導遊按鈕 */}
+                            <button
+                                onClick={() => onSearchGuide(item.id, item.location)}
+                                className={`flex items-center text-xs font-semibold transition duration-200 border rounded-full px-3 py-1 transform hover:scale-[1.03] ${item.searchData ? 'bg-green-100 text-green-700 border-green-400' : 'bg-custom-accent text-white hover:bg-custom-primary'}`}
+                                disabled={item.searchData && item.searchData.text && item.searchData.text.includes("載入中")}
+                            >
+                                {item.searchData && item.searchData.text && item.searchData.text.includes("載入中") ? '⏳ 載入中' : item.searchData ? '✅ 攻略' : '🔎 導遊攻略'}
+                            </button>
+                            
+                            {/* 刪除按鈕 */}
+                            <button
+                                onClick={() => onDelete(item.id)}
+                                className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-sm font-medium p-1.5 rounded-full transition duration-150 transform active:scale-95"
+                                title="刪除項目"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {/* 顯示導遊搜尋結果 */}
+                    <GuideDataDisplay data={item.searchData} />
+                    {item.officialLink && (
+                        <a href={item.officialLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline mt-2 block font-medium">
+                            官方網站
+                        </a>
+                    )}
+                </li>
+            );
+        };
+
+
+        // --- 核心組件：單日行程列表 (可拖曳排序) ---
+        const DayPlanner = ({ day, dayItems, onUpdateOrder, onDelete, onSearchGuide }) => {
+            const now = useMemo(() => new Date(), []);
+            // 由於沒有實際行程時間和日期，這裡使用簡單的邏輯：第一個還沒完成的項目為 '現在'
+            const currentItem = dayItems.find(item => item.time > new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }));
+            const isToday = day === new Date().getDate(); // 簡易判斷今天，實際應根據行程日期
+
+            // 實作拖曳放置邏輯
+            const handleDrop = (e, targetItem) => {
+                e.preventDefault();
+                const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
+                const draggedItem = dayItems.find(item => item.id === draggedItemId);
+                
+                if (!draggedItem || draggedItem.id === targetItem.id) return;
+                
+                const newItems = dayItems.filter(item => item.id !== draggedItemId);
+                const targetIndex = newItems.findIndex(item => item.id === targetItem.id);
+                
+                newItems.splice(targetIndex, 0, draggedItem);
+                
+                onUpdateOrder(day, newItems);
+            };
+
+
+            return (
+                <div className="bg-white border border-custom-light-accent rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+                    {/* 天數標題 - 清晰、簡約的 iok.site 頂部設計 */}
+                    <div className="bg-custom-light-accent/50 text-custom-dark-text p-4 border-b border-custom-accent/50 flex justify-between items-center">
                         <h3 className="text-2xl font-extrabold flex items-center tracking-wider">
-                            <span role="img" aria-label="Sun" className="text-2xl mr-2 opacity-70">☀️</span> DAY {day}
+                            <span className="text-3xl font-extrabold mr-3 text-custom-accent">Day {day}</span> 
+                            {dayItems.length > 0 && <span className="text-lg font-medium opacity-80">{dayItems[0].date}</span>}
                         </h3>
-                        <span className="text-sm opacity-80 font-medium">{dayItems.length} 個項目</span>
                     </div>
                     
                     {/* 行程列表 */}
-                    <ul className="divide-y divide-gray-200">
-                        {dayItems.map((item, index) => {
-                            const statusInfo = STATUS_OPTIONS.find(s => s.value === item.status) || STATUS_OPTIONS[0];
-                            const typeInfo = TYPE_OPTIONS[item.type] || TYPE_OPTIONS.sight;
-                            const isCompleted = item.status === 'completed';
-
-                            return (
-                                <li 
-                                    key={item.id} 
-                                    draggable="true" // 啟用拖曳
-                                    onDragStart={(e) => handleDragStart(e, item)}
-                                    onDragOver={handleDragOver}
-                                    onDrop={(e) => handleDrop(e, item)}
-                                    onDragEnd={handleDragEnd}
-                                    // 使用不同的背景色來區分卡片類型，並配合主色調
-                                    className={`cursor-grab p-5 transition duration-150 border-l-4 border-l-custom-accent ${typeInfo.bgColor} ${isCompleted ? 'opacity-60' : 'hover:bg-gray-100'}`}
-                                >
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center w-full">
-                                        
-                                        <div className="flex-1 min-w-0 pr-4 space-y-1">
-                                            <div className="flex items-center space-x-3 mb-1">
-                                                {/* 景點名稱 */}
-                                                <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${typeInfo.bgColor === 'bg-card-sight-bg' ? 'text-custom-primary' : 'text-custom-dark-text'} border border-custom-accent/50`}>
-                                                    {typeInfo.icon} {typeInfo.label}
-                                                </span>
-                                                <span className="text-xl font-bold text-custom-dark-text">
-                                                    {item.location}
-                                                </span>
-                                            </div>
-                                            {item.notes && (
-                                                <p className={`text-sm italic pl-1 ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
-                                                    {item.notes}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <div className="flex flex-wrap space-x-2 mt-4 md:mt-0 items-center justify-end flex-shrink-0">
-                                            
-                                            {/* 導遊按鈕 */}
-                                            <button
-                                                onClick={() => onSearchGuide(item.id, item.location)}
-                                                className={`bg-custom-accent hover:bg-custom-dark-text text-white text-xs font-bold py-1.5 px-3 rounded-lg transition duration-200 shadow-sm flex items-center transform hover:scale-[1.05] ${item.searchData ? 'opacity-60' : ''}`}
-                                                disabled={item.searchData}
-                                            >
-                                                {item.searchData && item.searchData.text && item.searchData.text.includes("載入中") ? '⏳ 載入中...' : item.searchData ? '✅ 攻略' : '🔎 導遊攻略'}
-                                            </button>
-
-                                            {/* 導航按鈕 */}
-                                            <NaverMapButton location={item.location} />
-                                            
-                                            {/* 狀態切換下拉選單 */}
-                                            <select
-                                                value={item.status}
-                                                onChange={(e) => onStatusChange(item.id, e.target.value)}
-                                                className={`text-sm py-1.5 px-3 border rounded-lg shadow-sm focus:ring-custom-accent focus:border-custom-accent ${statusInfo.color}`}
-                                            >
-                                                {STATUS_OPTIONS.map(option => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            
-                                            {/* 刪除按鈕 */}
-                                            <button
-                                                onClick={() => onDelete(item.id)}
-                                                className="bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg transition duration-150 shadow-md focus:outline-none focus:ring-4 focus:ring-red-300 transform active:scale-95"
-                                            >
-                                                🗑️
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {/* 顯示導遊搜尋結果 */}
-                                    <GuideDataDisplay data={item.searchData} />
-                                </li>
-                            );
-                        })}
+                    <ul className="divide-y divide-custom-light-accent">
+                        {dayItems.map((item, index) => (
+                            <li 
+                                key={item.id} 
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => handleDrop(e, item)}
+                            >
+                                <ScheduleItem 
+                                    item={item} 
+                                    index={index}
+                                    isCurrent={item.id === currentItem?.id}
+                                    onDelete={onDelete} 
+                                    onSearchGuide={onSearchGuide}
+                                />
+                            </li>
+                        ))}
                     </ul>
                 </div>
             );
         };
+        
+        // --- Tab 1: 重要資訊 (KeyInfoTab) ---
+        const KeyInfoTab = ({ FLIGHT_IMAGE_TAIPEI_JEJU, FLIGHT_IMAGE_JEJU_TAIPEI }) => {
+            
+            const InfoCard = ({ title, children, icon }) => (
+                <div className="info-card p-6 border-b-2 border-custom-light-accent/50">
+                    <h4 className="text-xl font-black text-custom-dark-text mb-4 border-l-4 border-custom-accent pl-3 flex items-center">
+                        <span className="mr-2 text-2xl">{icon}</span>{title}
+                    </h4>
+                    <div className="text-sm leading-relaxed space-y-3">{children}</div>
+                </div>
+            );
+
+            const DetailBlock = ({ label, value, type = 'text' }) => (
+                <div className="flex justify-between items-start pt-2 border-t border-gray-100/50">
+                    <span className="font-medium text-custom-primary/70 w-1/3">{label}</span>
+                    <span className={`text-custom-dark-text font-bold text-right w-2/3 ${type === 'date' ? 'text-lg' : 'text-base'}`}>{value}</span>
+                </div>
+            );
+            
+            return (
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-10">
+                    <h2 className="text-3xl font-black text-custom-dark-text p-6 border-b border-custom-accent/50">✈️ 重要資訊一覽</h2>
+                    
+                    {/* 1. 航班機票 */}
+                    <InfoCard title="航班機票" icon="🎫">
+                        {/* 圖片佔位符 */}
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <img src={FLIGHT_IMAGE_TAIPEI_JEJU} alt="台北到濟州機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm" />
+                            <img src={FLIGHT_IMAGE_JEJU_TAIPEI} alt="濟州到台北機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm" />
+                        </div>
+                        
+                        <div className="mt-4 space-y-2">
+                            <h5 className="font-bold text-lg text-custom-accent">去程</h5>
+                            <DetailBlock label="路線" value="台北 → 濟州市" />
+                            <DetailBlock label="日期" value="12 月 4 日 週四" type="date" />
+                            <DetailBlock label="時間" value="02:50 - 06:05" />
+                            <DetailBlock label="飛行時間" value="2 小時 15 分" />
+                        </div>
+                        <div className="space-y-2 pt-4 border-t border-dashed border-gray-200">
+                            <h5 className="font-bold text-lg text-custom-accent">回程</h5>
+                            <DetailBlock label="路線" value="濟州市 → 台北" />
+                            <DetailBlock label="日期" value="12 月 8 日 週一" type="date" />
+                            <DetailBlock label="時間" value="22:15 - 23:50" />
+                            <DetailBlock label="飛行時間" value="2 小時 35 分" />
+                        </div>
+                    </InfoCard>
+
+                    {/* 2. 住宿 */}
+                    <InfoCard title="住宿資訊" icon="🏨">
+                        
+                        {/* 住宿 1 */}
+                        <div className="p-3 bg-custom-light-accent/30 rounded-lg">
+                            <h5 className="font-black text-lg text-custom-dark-text mb-2 border-b border-custom-accent/30 pb-1">第一間住宿</h5>
+                            <DetailBlock label="入住" value="2025 年 12 月 4 日 週四 (16:00後)" type="date" />
+                            <DetailBlock label="退房" value="2025 年 12 月 5 日 週五 (11:00前)" type="date" />
+                            <DetailBlock label="晚數" value="1 晚" />
+                            <DetailBlock label="地址" value="Jeju Island Jeju-si Aewol Coastal-ro 21104" />
+                        </div>
+
+                        {/* 住宿 2 */}
+                        <div className="p-3 bg-custom-light-accent/30 rounded-lg">
+                            <h5 className="font-black text-lg text-custom-dark-text mb-2 border-b border-custom-accent/30 pb-1">第二間住宿 (Heyy Seogwipo Hotel)</h5>
+                            <DetailBlock label="入住" value="2025 年 12 月 5 日 週五 (16:00後)" type="date" />
+                            <DetailBlock label="退房" value="2025 年 12 月 6 日 週六 (11:00前)" type="date" />
+                            <DetailBlock label="晚數" value="1 晚" />
+                            <div className="flex justify-between items-start pt-2 border-t border-gray-100/50">
+                                <span className="font-medium text-custom-primary/70 w-1/3">導航連結</span>
+                                <a href="https://map.naver.com/p/entry/place/1639869302?c=17.61,0,0,0,dh&placePath=/home?from=map&fromPanelNum=1&additionalHeight=76&timestamp=202511262236&locale=ko&svcName=map_pcv5&businessCategory=hotel" target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline font-bold text-right w-2/3">查看Naver地圖</a>
+                            </div>
+                        </div>
+
+                        {/* 住宿 3 */}
+                        <div className="p-3 bg-custom-light-accent/30 rounded-lg">
+                            <h5 className="font-black text-lg text-custom-dark-text mb-2 border-b border-custom-accent/30 pb-1">第三間住宿 (濟州機場-Urbanstay)</h5>
+                            <DetailBlock label="入住" value="2025 年 12 月 6 日 週六 (16:00後)" type="date" />
+                            <DetailBlock label="退房" value="2025 年 12 月 8 日 週一 (11:00前)" type="date" />
+                            <DetailBlock label="晚數" value="2 晚" />
+                            <div className="flex justify-between items-start pt-2 border-t border-gray-100/50">
+                                <span className="font-medium text-custom-primary/70 w-1/3">導航連結</span>
+                                <a href="https://naver.me/5S9zc50f" target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline font-bold text-right w-2/3">查看Naver地圖</a>
+                            </div>
+                        </div>
+                    </InfoCard>
+
+                    {/* 3. 取車資訊 */}
+                    <InfoCard title="取車/還車資訊" icon="🚗">
+                        <DetailBlock label="訂單編號" value="1359039416311386" />
+                        <DetailBlock label="租借期間" value="2025 年 12 月 4 日 07:00 至 12 月 8 日 20:00" />
+                        <DetailBlock label="總天數" value="5 天" />
+                        <DetailBlock label="地點" value="Jeju AutoHouse（92 Yonghae-ro, Cheju, Jeju-do）" />
+                        <DetailBlock label="交通方式" value="有接駁車" />
+                    </InfoCard>
+
+                    {/* 4. 必帶物品 (清單) */}
+                    <InfoCard title="必帶物品清單" icon="🎒">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3">
+                            {['護照', '台灣駕照', '國際駕照', '台幣', '信用卡(建議兩張)', '轉接頭', '手機', '換洗衣物', '拖鞋', '布鞋', '盥洗用品(牙刷牙膏)', '常備藥', '雨具', '3C用品', '生理用品'].map((item, index) => (
+                                <div key={index} className="flex items-center text-custom-dark-text font-medium">
+                                    <span className="text-custom-accent mr-2">✓</span> {item}
+                                </div>
+                            ))}
+                        </div>
+                    </InfoCard>
+                    
+                    {/* 5. 穿搭指南 */}
+                    <InfoCard title="冬季穿搭指南" icon="🧥">
+                        <p className="font-extrabold text-custom-dark-text">溫度預估: 5°C - 13°C (體感更低，風強勁)</p>
+                        <p className="text-custom-accent font-bold">原則：洋蔥式穿法（防風、保暖、易穿脫）</p>
+                        <ul className="list-disc list-inside space-y-2 ml-4">
+                            <li className="font-semibold text-custom-dark-text">外層 (防風關鍵)：
+                                <span className="font-normal text-gray-700">防風厚外套或長版羽絨衣。</span>
+                            </li>
+                            <li className="font-semibold text-custom-dark-text">內層 (排汗保暖)：
+                                <span className="font-normal text-gray-700">發熱衣、保暖內衣必備。</span>
+                            </li>
+                            <li className="font-semibold text-custom-dark-text">中層：
+                                <span className="font-normal text-gray-700">毛衣、厚衛衣。</span>
+                            </li>
+                            <li className="font-semibold text-custom-dark-text">下身：
+                                <span className="font-normal text-gray-700">內刷毛長褲或厚褲襪。</span>
+                            </li>
+                            <li className="font-semibold text-custom-dark-text">配件 (保暖頭頸)：
+                                <span className="font-normal text-gray-700">毛帽 (防風吹頭痛)、圍巾、手套。</span>
+                            </li>
+                        </ul>
+                    </InfoCard>
+                </div>
+            );
+        };
+
+        // --- Tab 3: 爬山資訊 (HikingInfoTab) ---
+        const HikingInfoTab = () => {
+            const DetailBlock = ({ label, value, icon }) => (
+                <div className="flex items-center space-x-2 p-2 bg-custom-base/50 rounded-lg">
+                    <span className="text-xl text-custom-accent">{icon}</span>
+                    <p className="text-sm">
+                        <span className="font-medium text-custom-primary/70 mr-1">{label}:</span>
+                        <span className="font-bold text-custom-dark-text">{value}</span>
+                    </p>
+                </div>
+            );
+
+            const PointList = ({ title, items, colorClass }) => (
+                <div className="mt-6">
+                    <h5 className={`text-lg font-black ${colorClass} mb-2`}>{title}</h5>
+                    <ul className="list-disc list-inside space-y-1.5 ml-4 text-sm text-gray-700">
+                        {items.map((item, index) => (
+                            <li key={index} className="leading-relaxed">
+                                <span className="font-bold text-custom-dark-text">{item.split('：')[0]}：</span>
+                                {item.split('：').slice(1).join('：')}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            );
+
+            return (
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden p-6 mb-10">
+                    <h2 className="text-3xl font-black text-custom-dark-text border-b border-custom-accent/50 pb-3 mb-6">🏔️ 漢拏山登山攻略</h2>
+                    
+                    {/* 裝備租借 */}
+                    <div className="p-4 bg-custom-light-accent/30 rounded-xl mb-6 shadow-inner">
+                        <h4 className="text-xl font-black text-custom-dark-text mb-3 flex items-center">
+                            <span className="mr-2 text-2xl">🎿</span> 裝備租借 (Oshare)
+                        </h4>
+                        <DetailBlock label="店家網站" icon="🌐" value={<a href="https://oshare.kr" target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline font-bold">https://oshare.kr</a>} />
+                        <DetailBlock label="領取時間" icon="⏰" value="12/07 19:00" />
+                        <DetailBlock label="歸還時間" icon="↩️" value="12/08 19:00" />
+                    </div>
+
+                    {/* 路線與基本資訊 */}
+                    <div className="p-4 bg-custom-light-accent/30 rounded-xl mb-6 shadow-inner">
+                        <h4 className="text-xl font-black text-custom-dark-text mb-3 border-b border-custom-accent/30 pb-1">ℹ️ 路線概要與預計時程</h4>
+                        <DetailBlock label="路線" icon="➡️" value="御里牧上 (어리목) 靈室下 (영실) - 非登頂路線" />
+                        <DetailBlock label="難度" icon="⭐" value="比較簡單的路線" />
+                        <DetailBlock label="總距離" icon="📏" value="約 12.6 KM" />
+                        <DetailBlock label="預計耗時" icon="⏱️" value="5.5 ~ 6 小時" />
+                        <DetailBlock label="山上氣溫" icon="🥶" value="0°C 至 -10°C (體感更低)" />
+                    </div>
+                    
+                    {/* 穿搭注意事項 */}
+                    <PointList
+                        title="⚠️ 爬山穿搭注意事項 (洋蔥式穿搭)"
+                        colorClass="text-custom-accent"
+                        items={[
+                            "頭部：毛帽（必備）、圍脖（比圍巾好用，不會被風吹散）。",
+                            "內層：排汗衣/發熱衣（絕對不要穿棉質，流汗濕了會失溫）。",
+                            "中層：刷毛衣 (Fleece) 或輕薄羽絨背心。",
+                            "外層：防風防水外套 (硬殼)，此層最重要。",
+                            "下身：內刷毛的防風登山褲。",
+                            "備用：厚羊毛襪（建議多帶一雙備用，萬一濕了可換）。",
+                            "鞋子：高筒防水登山鞋最佳（保護腳踝），搭配租借冰爪。",
+                        ]}
+                    />
+
+                    {/* 補給品 */}
+                    <PointList
+                        title="🍎 補給品建議 (當地購買)"
+                        colorClass="text-red-500"
+                        items={[
+                            "飲用水：至少 1.5 - 2 公升。",
+                            "食物：能量棒 (高熱量食物)、電解質運動飲料、飯捲、麵包等。",
+                            "注意：路上避難所沒有提供餐食，必須自備！",
+                        ]}
+                    />
+
+                </div>
+            );
+        };
+
 
         // --- 核心組件：App ---
         const App = () => {
-            const [itinerary, setItinerary] = useState(initialItinerary);
+            const [itinerary, setItinerary] = useState(MOCK_DAILY_ITINERARY);
             const [newLocation, setNewLocation] = useState('');
-            const [newDay, setNewDay] = useState(Math.max(1, ...initialItinerary.map(i => i.day)));
+            const [newDay, setNewDay] = useState(Math.max(1, ...MOCK_DAILY_ITINERARY.map(i => i.day)));
             const [newNotes, setNewNotes] = useState('');
-            const [newType, setNewType] = useState('sight');
-            const [nextId, setNextId] = useState(initialItinerary.length + 1);
-            const [currentTab, setCurrentTab] = useState('itinerary');
+            const [newCategory, setNewCategory] = useState('main');
+            const [nextId, setNextId] = useState(MOCK_DAILY_ITINERARY.length + 1);
+            const [currentTab, setCurrentTab] = useState('info'); // 預設 Tab 1
             const [liveTime, setLiveTime] = useState(new Date());
 
-            // --- 即時時間與模擬天氣 ---
+            // --- 即時時間與天氣 (模擬) ---
             useEffect(() => {
                 const timer = setInterval(() => setLiveTime(new Date()), 1000);
                 return () => clearInterval(timer);
             }, []);
-
             const formattedTime = liveTime.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-            
-            // 模擬天氣和建議 (需替換為真實 API)
-            const weather = { location: "濟州市", temp: "18°C", conditions: "多雲", advice: "建議攜帶輕便外套和太陽眼鏡。" };
+            const weather = { location: "濟州市", temp: "18°C", conditions: "多雲/風強", advice: "今日海邊風大，建議穿著防風外套。" };
+
 
             // --- 行程操作邏輯 ---
 
@@ -296,44 +559,42 @@
                 const newItem = {
                     id: nextId,
                     day: parseInt(newDay),
-                    type: newType,
+                    date: `12/${String(newDay).padStart(2, '0')}`, // 簡易日期處理
+                    category: newCategory,
+                    time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }), // 使用當前時間作為預設
                     location: newLocation.trim(),
                     notes: newNotes.trim(),
-                    status: 'pending',
-                    searchData: null
+                    naverMap: `https://map.naver.com/p/search/${encodeURIComponent(newLocation.trim())}`,
+                    searchData: null,
+                    officialLink: null,
                 };
                 
-                setItinerary([...itinerary, newItem].sort((a, b) => a.day - b.day));
+                setItinerary([...itinerary, newItem].sort((a, b) => a.day - b.day || a.time.localeCompare(b.time)));
                 setNextId(nextId + 1);
                 
                 setNewLocation('');
                 setNewNotes('');
                 setNewDay(Math.max(1, ...itinerary.map(i => i.day)));
-                setNewType('sight');
+                setNewCategory('main');
             };
 
             const handleDeleteItem = (id) => {
                 setItinerary(itinerary.filter(item => item.id !== id));
             };
 
-            const handleStatusChange = (id, newStatus) => {
-                setItinerary(itinerary.map(item => 
-                    item.id === id ? { ...item, status: newStatus } : item
-                ));
-            };
-
             const handleUpdateOrder = (day, newDayItems) => {
                 const otherItems = itinerary.filter(item => item.day !== day);
-                setItinerary([...otherItems, ...newDayItems].sort((a, b) => a.day - b.day));
+                // 重新設置 item 順序時，保持其他項目不變
+                setItinerary([...otherItems, ...newDayItems].sort((a, b) => a.day - b.day || a.time.localeCompare(b.time)));
             };
             
             // --- 導遊搜尋功能 (串接 Google Search Tool) ---
 
             const handleSearchGuide = async (itemId, location) => {
-                // 為了讓模型更專注於關鍵字，增加中文和英文查詢
-                const userQuery = `濟州島 ${location} 景點攻略 必吃美食 伴手禮`;
+                const userQuery = `濟州島 ${location} 景點攻略 推薦菜單或遊玩資訊 官方網站`;
                 
                 try {
+                    // 1. 設置載入狀態
                     setItinerary(itinerary.map(item => 
                         item.id === itemId ? { ...item, searchData: { text: "🔍 正在搜尋攻略中...", title: "載入中" } } : item
                     ));
@@ -367,7 +628,7 @@
                         }
                     }
                     
-                    // 更新 state
+                    // 2. 更新 state
                     setItinerary(itinerary.map(item => 
                         item.id === itemId ? { ...item, searchData: { text: fetchedText, title: fetchedTitle, uri: fetchedUri } } : item
                     ));
@@ -382,18 +643,18 @@
 
             // --- 介面渲染邏輯 ---
 
-            const groupedItinerary = itinerary.reduce((acc, item) => {
+            const groupedItinerary = useMemo(() => itinerary.reduce((acc, item) => {
                 (acc[item.day] = acc[item.day] || []).push(item);
-                // 確保每個 day 內的 items 是排序好的 (用於拖曳後的持久化順序)
-                acc[item.day].sort((a, b) => itinerary.indexOf(a) - itinerary.indexOf(b));
+                // 確保每個 day 內的 items 是排序好的
+                acc[item.day].sort((a, b) => a.time.localeCompare(b.time));
                 return acc;
-            }, {});
+            }, {}), [itinerary]);
 
             const days = Object.keys(groupedItinerary).map(Number).sort((a, b) => a - b);
             
             const TabButton = ({ name, label }) => (
                 <button
-                    className={`px-6 py-3 font-bold transition-colors text-lg ${
+                    className={`px-6 py-3 font-bold transition-colors text-lg focus:outline-none ${
                         currentTab === name
                             ? 'bg-custom-base text-custom-primary border-b-2 border-custom-accent shadow-inner'
                             : 'text-gray-500 hover:text-custom-primary/80'
@@ -404,64 +665,6 @@
                 </button>
             );
 
-            const ToolsTab = () => (
-                <div className="space-y-8 p-6 bg-white rounded-2xl shadow-xl">
-                    <h3 className="text-3xl font-extrabold text-custom-dark-text border-b border-custom-accent/30 pb-3 mb-4">✈️ 旅行工具箱</h3>
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* 航班資訊卡片 */}
-                        <div className="bg-card-transport-bg p-6 border border-gray-200 rounded-xl shadow-md">
-                            <h4 className="text-xl font-bold text-custom-primary mb-3 flex items-center">
-                                航班資訊 <span role="img" aria-label="Plane" className="ml-2">🛫</span>
-                            </h4>
-                            <textarea
-                                className="w-full h-24 p-3 border border-gray-300 rounded-lg text-sm focus:border-custom-accent bg-white"
-                                placeholder="請輸入航班號碼、起降時間、航空公司..."
-                            ></textarea>
-                            <button className="mt-3 w-full bg-custom-accent hover:bg-custom-primary text-white font-medium py-2 rounded-lg transition-colors">儲存航班</button>
-                        </div>
-                        
-                        {/* 住宿資訊卡片 */}
-                        <div className="bg-card-transport-bg p-6 border border-gray-200 rounded-xl shadow-md">
-                            <h4 className="text-xl font-bold text-custom-primary mb-3 flex items-center">
-                                住宿資訊 <span role="img" aria-label="Hotel" className="ml-2">🏨</span>
-                            </h4>
-                            <textarea
-                                className="w-full h-24 p-3 border border-gray-300 rounded-lg text-sm focus:border-custom-accent bg-white"
-                                placeholder="請輸入酒店名稱、地址、預約號碼..."
-                            ></textarea>
-                            <button className="mt-3 w-full bg-custom-accent hover:bg-custom-primary text-white font-medium py-2 rounded-lg transition-colors">儲存住宿</button>
-                        </div>
-
-                        {/* 緊急聯絡電話卡片 */}
-                        <div className="bg-card-transport-bg p-6 border border-gray-200 rounded-xl shadow-md">
-                            <h4 className="text-xl font-bold text-custom-primary mb-3 flex items-center">
-                                緊急聯絡 <span role="img" aria-label="Emergency" className="ml-2">🚨</span>
-                            </h4>
-                            <p className="text-sm font-semibold mb-2 text-red-600">濟州島緊急電話：119 / 旅遊諮詢：1330</p>
-                            <textarea
-                                className="w-full h-16 p-3 border border-gray-300 rounded-lg text-sm focus:border-custom-accent bg-white"
-                                placeholder="請輸入保險公司、信用卡客服電話..."
-                            ></textarea>
-                            <button className="mt-3 w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg transition-colors">儲存聯絡人</button>
-                        </div>
-
-                        {/* 記帳/預算表卡片 (簡化版) */}
-                        <div className="bg-card-transport-bg p-6 border border-gray-200 rounded-xl shadow-md">
-                            <h4 className="text-xl font-bold text-custom-primary mb-3 flex items-center">
-                                記帳/預算 <span role="img" aria-label="Money" className="ml-2">💰</span>
-                            </h4>
-                            <input type="number" placeholder="預算總額 (KRW)" className="w-full p-2 border border-gray-300 rounded-lg mb-2 focus:border-custom-accent bg-white" />
-                            <textarea
-                                className="w-full h-16 p-3 border border-gray-300 rounded-lg text-sm focus:border-custom-accent bg-white"
-                                placeholder="記錄支出項目：交通 ₩50,000 / 食物 ₩25,000..."
-                            ></textarea>
-                            <button className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg transition-colors">儲存預算</button>
-                        </div>
-                    </div>
-                </div>
-            );
-
 
             return (
                 <div className="bg-custom-base min-h-screen">
@@ -470,7 +673,7 @@
                     <div className="sticky top-0 z-10 bg-white shadow-xl p-4 mb-8 rounded-b-2xl border-b-4 border-custom-accent/30">
                         <div className="flex justify-between items-center max-w-5xl mx-auto">
                             <h1 className="text-3xl font-black text-custom-dark-text tracking-widest flex items-center">
-                                <span role="img" aria-label="Palm Tree" className="text-3xl mr-3 opacity-80">🌴</span> 濟州旅程
+                                <span role="img" aria-label="Palm Tree" className="text-3xl mr-3 opacity-80">🌴</span> JEJU TRIP
                             </h1>
                             <div className="text-right text-custom-primary">
                                 <p className="text-2xl font-extrabold text-custom-accent">{formattedTime}</p>
@@ -484,92 +687,99 @@
                         
                         {/* Tab 按鈕 - 高雅設計 */}
                         <div className="flex border-b border-gray-300 mb-8">
-                            <TabButton name="itinerary" label="📅 行程規劃" />
-                            <TabButton name="tools" label="🛠️ 旅行工具箱" />
+                            <TabButton name="info" label="重要資訊 / 穿搭" />
+                            <TabButton name="daily" label="每日行程 / 景點" />
+                            <TabButton name="hiking" label="🏔️ 爬山資訊" />
                         </div>
 
-                        {currentTab === 'itinerary' && (
+                        {currentTab === 'info' && <KeyInfoTab FLIGHT_IMAGE_TAIPEI_JEJU={FLIGHT_IMAGE_TAIPEI_JEJU} FLIGHT_IMAGE_JEJU_TAIPEI={FLIGHT_IMAGE_JEJU_TAIPEI} />}
+                        
+                        {currentTab === 'hiking' && <HikingInfoTab />}
+
+                        {currentTab === 'daily' && (
                             <div className="space-y-10">
                                 
-                                {/* 1. 新增行程表單 */}
+                                {/* 1. 新增行程表單 (隱藏/展開式) */}
                                 <div className="border-2 border-custom-accent p-6 rounded-2xl bg-white shadow-xl">
-                                    <h2 className="text-2xl font-bold text-custom-dark-text mb-5 flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-custom-accent" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-                                        </svg>
-                                        快速新增項目
-                                    </h2>
-                                    <form onSubmit={handleAddItem} className="space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-10 gap-4">
-                                            
-                                            <label className="flex flex-col sm:col-span-1">
-                                                <span className="text-sm font-medium text-custom-primary mb-1">天數</span>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={newDay}
-                                                    onChange={(e) => setNewDay(e.target.value)}
-                                                    required
-                                                    className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
-                                                />
-                                            </label>
-
-                                            <label className="flex flex-col sm:col-span-3">
-                                                <span className="text-sm font-medium text-custom-primary mb-1">類型</span>
-                                                <select
-                                                    value={newType}
-                                                    onChange={(e) => setNewType(e.target.value)}
-                                                    className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
-                                                    required
-                                                >
-                                                    <option value="sight">{TYPE_OPTIONS.sight.icon} {TYPE_OPTIONS.sight.label}</option>
-                                                    <option value="food">{TYPE_OPTIONS.food.icon} {TYPE_OPTIONS.food.label}</option>
-                                                    <option value="transport">{TYPE_OPTIONS.transport.icon} {TYPE_OPTIONS.transport.label}</option>
-                                                </select>
-                                            </label>
-
-                                            <label className="flex flex-col sm:col-span-6">
-                                                <span className="text-sm font-medium text-custom-primary mb-1">地點名稱</span>
-                                                <input
-                                                    type="text"
-                                                    value={newLocation}
-                                                    onChange={(e) => setNewLocation(e.target.value)}
-                                                    placeholder="例如：牛島、漢拏山..."
-                                                    required
-                                                    className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
-                                                />
-                                            </label>
-                                        </div>
-                                        <label className="flex flex-col">
-                                            <span className="text-sm font-medium text-custom-primary mb-1">備註/活動</span>
-                                            <input
-                                                type="text"
-                                                value={newNotes}
-                                                onChange={(e) => setNewNotes(e.target.value)}
-                                                placeholder="例如：租機車環島、午餐吃黑豬肉"
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
-                                            />
-                                        </label>
-                                        <button
-                                            type="submit"
-                                            className="w-full bg-custom-accent hover:bg-custom-primary text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-custom-accent/50"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <details>
+                                        <summary className="text-2xl font-bold text-custom-dark-text cursor-pointer pb-2 flex items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-custom-accent" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                                             </svg>
-                                            加入行程
-                                        </button>
-                                    </form>
+                                            快速新增項目
+                                        </summary>
+                                        <form onSubmit={handleAddItem} className="space-y-4 pt-4 border-t border-dashed border-gray-200 mt-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-10 gap-4">
+                                                
+                                                <label className="flex flex-col sm:col-span-2">
+                                                    <span className="text-sm font-medium text-custom-primary mb-1">天數 (Day)</span>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={newDay}
+                                                        onChange={(e) => setNewDay(e.target.value)}
+                                                        required
+                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                    />
+                                                </label>
+
+                                                <label className="flex flex-col sm:col-span-3">
+                                                    <span className="text-sm font-medium text-custom-primary mb-1">類別</span>
+                                                    <select
+                                                        value={newCategory}
+                                                        onChange={(e) => setNewCategory(e.target.value)}
+                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                        required
+                                                    >
+                                                        {Object.keys(CATEGORY_MAP).map(key => (
+                                                            <option key={key} value={key}>{CATEGORY_MAP[key].icon} {CATEGORY_MAP[key].label}</option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+
+                                                <label className="flex flex-col sm:col-span-5">
+                                                    <span className="text-sm font-medium text-custom-primary mb-1">地點名稱 (必填)</span>
+                                                    <input
+                                                        type="text"
+                                                        value={newLocation}
+                                                        onChange={(e) => setNewLocation(e.target.value)}
+                                                        placeholder="例如：牛島、漢拏山..."
+                                                        required
+                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                    />
+                                                </label>
+                                            </div>
+                                            <label className="flex flex-col">
+                                                <span className="text-sm font-medium text-custom-primary mb-1">備註/活動 (選填)</span>
+                                                <input
+                                                    type="text"
+                                                    value={newNotes}
+                                                    onChange={(e) => setNewNotes(e.target.value)}
+                                                    placeholder="例如：租機車環島、午餐吃黑豬肉"
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                />
+                                            </label>
+                                            <button
+                                                type="submit"
+                                                className="w-full bg-custom-accent hover:bg-custom-primary text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-custom-accent/50"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                                                </svg>
+                                                加入行程
+                                            </button>
+                                        </form>
+                                    </details>
                                 </div>
                                 
                                 {/* 2. 行程顯示區域 */}
-                                <div className="space-y-8 scrollable-planner">
+                                <div className="space-y-10 scrollable-planner">
                                     <h2 className="text-3xl font-black text-custom-dark-text border-b border-custom-accent/30 pb-3 flex items-center">
-                                        <span role="img" aria-label="Map Pin" className="text-xl mr-2 opacity-70">📍</span> 我的完整行程 ({days.length} 天)
+                                        <span role="img" aria-label="Map Pin" className="text-xl mr-2 opacity-70">🗺️</span> 完整行程細節 ({days.length} 天)
                                     </h2>
                                     
                                     {days.length === 0 ? (
-                                        <p className="text-custom-primary/70 italic p-6 bg-white rounded-xl text-center shadow-inner">目前沒有任何行程，趕快規劃您的濟州島之旅吧！</p>
+                                        <p className="text-custom-primary/70 italic p-6 bg-white rounded-xl text-center shadow-inner">目前沒有任何行程，請在上方新增項目。</p>
                                     ) : (
                                         days.map(day => (
                                             <DayPlanner 
@@ -578,7 +788,6 @@
                                                 dayItems={groupedItinerary[day]} 
                                                 onUpdateOrder={handleUpdateOrder}
                                                 onDelete={handleDeleteItem}
-                                                onStatusChange={handleStatusChange}
                                                 onSearchGuide={handleSearchGuide}
                                             />
                                         ))
@@ -587,11 +796,10 @@
                             </div>
                         )}
                         
-                        {currentTab === 'tools' && <ToolsTab />}
                     </div>
                     
                     {/* 懸浮新增按鈕 (右下角 +) */}
-                    {currentTab === 'itinerary' && (
+                    {currentTab === 'daily' && (
                         <button
                             className="fixed bottom-6 right-6 bg-custom-accent hover:bg-custom-primary text-white p-4 rounded-full shadow-2xl transition duration-300 transform hover:scale-110 active:scale-90 focus:outline-none focus:ring-4 focus:ring-custom-accent/70"
                             onClick={() => {
