@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>濟州島旅程規劃</title>
+    
+    <!-- 載入 Google Fonts: Montserrat, Noto Serif TC, Zen Kaku Gothic New -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Noto+Serif+TC:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap" rel="stylesheet">
+    
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 設定 Tailwind 自訂顏色和主題 (MUST BE BEFORE REACT SCRIPT) -->
+    <!-- 設定 Tailwind 自訂顏色和字體 -->
     <script>
         tailwind.config = {
             theme: {
@@ -22,7 +26,12 @@
                         'custom-dark-text': '#5C4E33',    // 用於標題的深色文字
                     },
                     fontFamily: {
-                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+                        // English/System: Montserrat
+                        sans: ['Montserrat', 'sans-serif'],
+                        // Chinese Title: Noto Serif TC
+                        serif: ['Noto Serif TC', 'serif'],
+                        // Chinese Content: Zen Kaku Gothic New (default is 300-light)
+                        content: ['Zen Kaku Gothic New', 'sans-serif'],
                     }
                 }
             }
@@ -30,33 +39,40 @@
     </script>
 
     <style>
-        /* 確保字體和基本顯示 */
+        /* 基礎字體設定：內文使用 Zen Kaku Gothic New 細體 */
         body { 
-            font-family: 'Inter', 'Noto Sans TC', sans-serif; 
+            font-family: 'Zen Kaku Gothic New', 'Montserrat', sans-serif; 
             color: #82663A; 
+            font-weight: 300; /* 預設使用細體 */
         }
-        /* 實現 iok.site 簡約風格的線條分隔 */
+        
+        /* 針對標題/重要文字覆蓋字體 */
+        .font-serif-title {
+            font-family: 'Noto Serif TC', serif;
+            font-weight: 700;
+        }
+        .font-montserrat {
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        /* iok.site 風格的線條分隔 */
         .info-card {
-            border-top: 1px solid #E0DACD; /* 淺強調色線條 */
+            border-top: 1px solid #E0DACD; 
+            padding-top: 2rem;
         }
         .info-card:first-child {
             border-top: none;
+            padding-top: 0;
         }
-        /* 隱藏原生滾動條，使用自訂樣式 */
-        .scrollable-planner::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollable-planner {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        /* 讓拖曳物件半透明 */
-        .dragging { opacity: 0.5; }
 
-        /* Custom input style for elegant look */
+        /* 隱藏滾動條 */
+        .scrollable-planner::-webkit-scrollbar { display: none; }
+        .scrollable-planner { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 簡潔輸入框風格 */
         input[type="text"], input[type="number"], select, textarea {
             transition: all 0.2s;
-            border-radius: 8px !important;
+            border-radius: 4px !important;
         }
     </style>
 </head>
@@ -75,15 +91,15 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- Firebase/API 相關變數 (確保在 Canvas 環境中運行) ---
+        // --- Firebase/API 相關變數 ---
         const apiKey = ""; 
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
         // --- 靜態配置與資料 ---
 
         // 用戶提供的圖片佔位符 (請用 Base64 數據替換)
-        const FLIGHT_IMAGE_TAIPEI_JEJU = "https://placehold.co/400x150/E0DACD/82663A?text=台北→濟州機票圖片";
-        const FLIGHT_IMAGE_JEJU_TAIPEI = "https://placehold.co/400x150/E0DACD/82663A?text=濟州→台北機票圖片";
+        const FLIGHT_IMAGE_TAIPEI_JEJU = "https://placehold.co/600x250/E0DACD/5C4E33?text=台北→濟州機票圖片+(建議尺寸:600x250)";
+        const FLIGHT_IMAGE_JEJU_TAIPEI = "https://placehold.co/600x250/E0DACD/5C4E33?text=濟州→台北機票圖片+(建議尺寸:600x250)";
 
 
         const CATEGORY_MAP = {
@@ -96,9 +112,9 @@
 
         const MOCK_DAILY_ITINERARY = [
             // Day 1: 12/04 (Thursday)
-            { id: 101, day: 1, date: '12/04 週四', category: 'transport', time: '07:00', location: '濟州國際機場 (Jeju International Airport) -> Jeju AutoHouse', notes: "抵達、取車，接駁車服務", naverMap: 'https://map.naver.com/p/search/Jeju%20AutoHouse', searchData: null, officialLink: null },
+            { id: 101, day: 1, date: '12/04 週四', category: 'transport', time: '07:00', location: '濟州國際機場 → Jeju AutoHouse', notes: "抵達、取車，接駁車服務", naverMap: 'https://map.naver.com/p/search/Jeju%20AutoHouse', searchData: null, officialLink: null },
             { id: 102, day: 1, date: '12/04 週四', category: 'main', time: '10:00', location: '城山日出峰 (Seongsan Ilchulbong)', notes: "世界自然遺產，經典景點", naverMap: 'https://map.naver.com/p/entry/place/11516281', searchData: null, officialLink: null },
-            { id: 103, day: 1, date: '12/04 週四', category: 'food', time: '13:00', location: '海女之家 (Haenyeo House) (城山店)', notes: "午餐：新鮮海膽湯、鮑魚粥", naverMap: 'https://map.naver.com/p/search/해녀의집', searchData: null, officialLink: null },
+            { id: 103, day: 1, date: '12/04 週四', category: 'food', time: '13:00', location: '海女之家 (Haenyeo House)', notes: "午餐：新鮮海膽湯、鮑魚粥", naverMap: 'https://map.naver.com/p/search/해녀의집', searchData: null, officialLink: null },
             { id: 104, day: 1, date: '12/04 週四', category: 'main', time: '15:30', location: '涉地岬 (Seopjikoji)', notes: "海岸線步道、燈塔、韓劇場景", naverMap: 'https://map.naver.com/p/entry/place/13361405', searchData: null, officialLink: null },
             { id: 105, day: 1, date: '12/04 週四', category: 'transport', time: '18:00', location: '第一間住宿 (Aewol Coastal-ro 21104)', notes: "入住，準備晚餐", naverMap: 'https://map.naver.com/p/search/Jeju%20Island%20Jeju-si%20Aewol%20Coastal-ro%2021104', searchData: null, officialLink: null },
             
@@ -143,13 +159,14 @@
         const ScheduleItem = ({ item, index, isCurrent, onUpdateOrder, onDelete, onSearchGuide }) => {
             const typeInfo = CATEGORY_MAP[item.category] || CATEGORY_MAP.main;
             
-            const NaverMapButton = ({ location, mapUrl }) => (
+            const NaverMapButton = ({ mapUrl }) => (
                 <a
                     href={mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center text-custom-accent hover:text-custom-dark-text text-xs font-semibold transition duration-200 border border-custom-accent/50 rounded-full px-3 py-1 bg-white hover:bg-custom-light-accent transform hover:scale-[1.03]"
+                    className="flex items-center font-montserrat text-custom-accent hover:text-white text-xs font-semibold transition duration-200 border border-custom-accent/50 rounded-full px-3 py-1 bg-white hover:bg-custom-accent transform hover:scale-[1.03]"
                 >
+                    {/* Icon: Map Pin */}
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
@@ -162,15 +179,15 @@
                 
                 let text = data.text || "";
                 
-                // 為了讓文字更符合 iok.site 的簡約風格，強調色只用在連結或重要標題上
                 return (
                     <div className="mt-4 p-4 bg-gray-50/50 border-t border-custom-light-accent rounded-b-xl">
-                        <p className="text-sm font-semibold text-custom-dark-text mb-2 border-b border-dashed pb-1">
+                        <p className="text-sm font-serif-title text-custom-dark-text mb-2 border-b border-dashed pb-1">
                             {data.title ? `導遊分析: ${data.title}` : '導遊攻略'}
                         </p>
-                        <p className="text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: text }} />
+                        {/* 內文使用 Zen Kaku Gothic New 細體 */}
+                        <p className="text-xs font-content text-gray-700 leading-relaxed font-light" dangerouslySetInnerHTML={{ __html: text }} />
                         {data.uri && (
-                            <a href={data.uri} target="_blank" rel="noopener noreferrer" className="text-xs text-custom-accent hover:underline mt-2 block font-medium">
+                            <a href={data.uri} target="_blank" rel="noopener noreferrer" className="text-xs font-montserrat text-custom-accent hover:underline mt-2 block font-medium">
                                 來源連結
                             </a>
                         )}
@@ -186,9 +203,6 @@
                 const draggedItem = item.dayItems.find(i => i.id === draggedItemId);
                 
                 if (!draggedItem || draggedItem.id === item.id) return;
-                
-                // 執行父組件的排序邏輯 (這裡需要傳遞給 DayPlanner，但為了單元化，我們直接在 DayPlanner 處理)
-                // 這裡僅處理拖曳視覺效果
             };
             
             const currentItemClasses = isCurrent ? "border-l-4 border-l-red-500 bg-red-50/50 shadow-md" : "border-l-4 border-l-custom-light-accent hover:bg-gray-50";
@@ -197,7 +211,7 @@
             return (
                 <li 
                     key={item.id} 
-                    draggable="true" // 啟用拖曳
+                    draggable="true" 
                     onDragStart={(e) => handleDragStart(e, item)}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
@@ -207,19 +221,22 @@
                     <div className="flex flex-col sm:flex-row justify-between items-start w-full">
                         <div className="flex-1 min-w-0 pr-4 space-y-2">
                             <div className="flex items-center space-x-3">
-                                {/* 時間和類別標籤 */}
-                                <span className="text-sm font-bold text-custom-dark-text border-r border-custom-light-accent pr-3">{item.time}</span>
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color} bg-custom-light-accent/50`}>
+                                {/* 時間 - Montserrat 粗體 */}
+                                <span className="text-sm font-montserrat font-bold text-custom-dark-text border-r border-custom-light-accent pr-3">{item.time}</span>
+                                {/* 類別標籤 - Zen Kaku Gothic New 細體 */}
+                                <span className={`text-xs font-content font-light px-2 py-0.5 rounded-full ${typeInfo.color} bg-custom-light-accent/50`}>
+                                    {/* Icon: Category */}
                                     {typeInfo.icon} {typeInfo.label}
                                 </span>
                             </div>
-                            {/* 地點名稱 */}
-                            <h3 className="text-xl font-extrabold text-custom-dark-text leading-tight">
+                            {/* 地點名稱 - Noto Serif TC 粗體 */}
+                            <h3 className="text-xl font-serif-title text-custom-dark-text leading-tight">
                                 {item.location}
-                                {isCurrent && <span className="ml-2 text-sm text-red-500">(現在)</span>}
+                                {isCurrent && <span className="ml-2 text-sm font-montserrat text-red-500">(NOW)</span>}
                             </h3>
                             {item.notes && (
-                                <p className="text-sm italic text-gray-700">
+                                {/* 備註 - Zen Kaku Gothic New 細體 */}
+                                <p className="text-sm italic font-content text-gray-700 font-light">
                                     {item.notes}
                                 </p>
                             )}
@@ -228,15 +245,16 @@
                         <div className="flex flex-wrap space-x-2 mt-4 sm:mt-0 items-center justify-end flex-shrink-0">
                             
                             {/* 導航按鈕 */}
-                            {item.naverMap && <NaverMapButton location={item.location} mapUrl={item.naverMap} />}
+                            {item.naverMap && <NaverMapButton mapUrl={item.naverMap} />}
 
                             {/* 導遊按鈕 */}
                             <button
                                 onClick={() => onSearchGuide(item.id, item.location)}
-                                className={`flex items-center text-xs font-semibold transition duration-200 border rounded-full px-3 py-1 transform hover:scale-[1.03] ${item.searchData ? 'bg-green-100 text-green-700 border-green-400' : 'bg-custom-accent text-white hover:bg-custom-primary'}`}
+                                className={`flex items-center text-xs font-montserrat font-semibold transition duration-200 border rounded-full px-3 py-1 transform hover:scale-[1.03] ${item.searchData ? 'bg-green-100 text-green-700 border-green-400' : 'bg-custom-accent text-white hover:bg-custom-primary'}`}
                                 disabled={item.searchData && item.searchData.text && item.searchData.text.includes("載入中")}
                             >
-                                {item.searchData && item.searchData.text && item.searchData.text.includes("載入中") ? '⏳ 載入中' : item.searchData ? '✅ 攻略' : '🔎 導遊攻略'}
+                                {/* Icon: Search/Success */}
+                                {item.searchData && item.searchData.text && item.searchData.text.includes("載入中") ? '⏳ 載入中' : item.searchData ? '✅ 攻略' : '🔎 攻略'}
                             </button>
                             
                             {/* 刪除按鈕 */}
@@ -245,6 +263,7 @@
                                 className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-sm font-medium p-1.5 rounded-full transition duration-150 transform active:scale-95"
                                 title="刪除項目"
                             >
+                                {/* Icon: Delete */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clipRule="evenodd" />
                                 </svg>
@@ -254,7 +273,7 @@
                     {/* 顯示導遊搜尋結果 */}
                     <GuideDataDisplay data={item.searchData} />
                     {item.officialLink && (
-                        <a href={item.officialLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline mt-2 block font-medium">
+                        <a href={item.officialLink} target="_blank" rel="noopener noreferrer" className="text-xs font-montserrat text-blue-500 hover:underline mt-2 block font-medium">
                             官方網站
                         </a>
                     )}
@@ -265,23 +284,20 @@
 
         // --- 核心組件：單日行程列表 (可拖曳排序) ---
         const DayPlanner = ({ day, dayItems, onUpdateOrder, onDelete, onSearchGuide }) => {
-            const now = useMemo(() => new Date(), []);
-            // 由於沒有實際行程時間和日期，這裡使用簡單的邏輯：第一個還沒完成的項目為 '現在'
-            const currentItem = dayItems.find(item => item.time > new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }));
-            const isToday = day === new Date().getDate(); // 簡易判斷今天，實際應根據行程日期
-
-            // 實作拖曳放置邏輯
             const handleDrop = (e, targetItem) => {
                 e.preventDefault();
                 const draggedItemId = parseInt(e.dataTransfer.getData("itemId"));
-                const draggedItem = dayItems.find(item => item.id === draggedItemId);
                 
-                if (!draggedItem || draggedItem.id === targetItem.id) return;
+                if (draggedItemId === targetItem.id) return;
                 
-                const newItems = dayItems.filter(item => item.id !== draggedItemId);
-                const targetIndex = newItems.findIndex(item => item.id === targetItem.id);
+                const draggedIndex = dayItems.findIndex(item => item.id === draggedItemId);
+                const targetIndex = dayItems.findIndex(item => item.id === targetItem.id);
                 
-                newItems.splice(targetIndex, 0, draggedItem);
+                if (draggedIndex === -1 || targetIndex === -1) return;
+
+                const newItems = [...dayItems];
+                const [removed] = newItems.splice(draggedIndex, 1);
+                newItems.splice(targetIndex, 0, removed);
                 
                 onUpdateOrder(day, newItems);
             };
@@ -289,11 +305,13 @@
 
             return (
                 <div className="bg-white border border-custom-light-accent rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-                    {/* 天數標題 - 清晰、簡約的 iok.site 頂部設計 */}
+                    {/* 天數標題 - Noto Serif TC 粗體 */}
                     <div className="bg-custom-light-accent/50 text-custom-dark-text p-4 border-b border-custom-accent/50 flex justify-between items-center">
-                        <h3 className="text-2xl font-extrabold flex items-center tracking-wider">
-                            <span className="text-3xl font-extrabold mr-3 text-custom-accent">Day {day}</span> 
-                            {dayItems.length > 0 && <span className="text-lg font-medium opacity-80">{dayItems[0].date}</span>}
+                        <h3 className="text-2xl font-serif-title flex items-center tracking-wider">
+                            {/* Day Number - Montserrat 粗體 */}
+                            <span className="text-3xl font-montserrat font-extrabold mr-3 text-custom-accent">Day {day}</span> 
+                            {/* Date - Zen Kaku Gothic New 細體 */}
+                            {dayItems.length > 0 && <span className="text-lg font-content font-light opacity-80">{dayItems[0].date}</span>}
                         </h3>
                     </div>
                     
@@ -308,8 +326,8 @@
                                 <ScheduleItem 
                                     item={item} 
                                     index={index}
-                                    isCurrent={item.id === currentItem?.id}
-                                    onDelete={onDelete} 
+                                    isCurrent={false} /* 實際應用中需根據時間判斷 */
+                                    onDelete={onDeleteItem} 
                                     onSearchGuide={onSearchGuide}
                                 />
                             </li>
@@ -324,42 +342,54 @@
             
             const InfoCard = ({ title, children, icon }) => (
                 <div className="info-card p-6 border-b-2 border-custom-light-accent/50">
-                    <h4 className="text-xl font-black text-custom-dark-text mb-4 border-l-4 border-custom-accent pl-3 flex items-center">
+                    {/* 標題 - Noto Serif TC 粗體 */}
+                    <h4 className="text-2xl font-serif-title text-custom-dark-text mb-4 border-l-4 border-custom-accent pl-3 flex items-center">
+                        {/* Icon: Section */}
                         <span className="mr-2 text-2xl">{icon}</span>{title}
                     </h4>
-                    <div className="text-sm leading-relaxed space-y-3">{children}</div>
+                    {/* 內文區塊 - Zen Kaku Gothic New 細體 */}
+                    <div className="text-base font-content font-light leading-relaxed space-y-4">{children}</div>
                 </div>
             );
 
-            const DetailBlock = ({ label, value, type = 'text' }) => (
-                <div className="flex justify-between items-start pt-2 border-t border-gray-100/50">
-                    <span className="font-medium text-custom-primary/70 w-1/3">{label}</span>
-                    <span className={`text-custom-dark-text font-bold text-right w-2/3 ${type === 'date' ? 'text-lg' : 'text-base'}`}>{value}</span>
+            const DetailBlock = ({ label, value, type = 'text', link = null }) => (
+                <div className="flex flex-col sm:flex-row justify-between items-start pt-3 border-t border-gray-100/50">
+                    {/* Label - Zen Kaku Gothic New 細體 */}
+                    <span className="font-content font-light text-custom-primary/70 sm:w-1/3 mb-1 sm:mb-0">{label}</span>
+                    {/* Value - Montserrat (for dates/numbers) or Zen Kaku Gothic New 細體 */}
+                    <span className={`text-custom-dark-text font-bold text-left sm:text-right w-full sm:w-2/3 ${type === 'date' ? 'text-lg font-montserrat' : 'text-base font-content'}`}>
+                        {link ? (
+                            <a href={link} target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline">
+                                {value}
+                            </a>
+                        ) : (
+                            value
+                        )}
+                    </span>
                 </div>
             );
             
             return (
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-10">
-                    <h2 className="text-3xl font-black text-custom-dark-text p-6 border-b border-custom-accent/50">✈️ 重要資訊一覽</h2>
+                    {/* 主標題 - Noto Serif TC 極粗 */}
+                    <h2 className="text-4xl font-serif-title font-extrabold text-custom-dark-text p-6 border-b border-custom-accent/50">✈️ 重要資訊一覽</h2>
                     
                     {/* 1. 航班機票 */}
                     <InfoCard title="航班機票" icon="🎫">
-                        {/* 圖片佔位符 */}
+                        {/* 圖片區域 (Base64) */}
                         <div className="flex flex-col md:flex-row gap-4">
-                            <img src={FLIGHT_IMAGE_TAIPEI_JEJU} alt="台北到濟州機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm" />
-                            <img src={FLIGHT_IMAGE_JEJU_TAIPEI} alt="濟州到台北機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm" />
+                            <img src={FLIGHT_IMAGE_TAIPEI_JEJU} alt="台北到濟州機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm border border-custom-light-accent" />
+                            <img src={FLIGHT_IMAGE_JEJU_TAIPEI} alt="濟州到台北機票" className="w-full md:w-1/2 rounded-lg object-cover shadow-sm border border-custom-light-accent" />
                         </div>
                         
-                        <div className="mt-4 space-y-2">
-                            <h5 className="font-bold text-lg text-custom-accent">去程</h5>
-                            <DetailBlock label="路線" value="台北 → 濟州市" />
+                        <div className="mt-6 space-y-2 p-3 border border-custom-accent/30 rounded-lg bg-custom-light-accent/10">
+                            <h5 className="font-serif-title text-lg text-custom-accent font-bold mb-2">去程 (Outbound)</h5>
                             <DetailBlock label="日期" value="12 月 4 日 週四" type="date" />
                             <DetailBlock label="時間" value="02:50 - 06:05" />
                             <DetailBlock label="飛行時間" value="2 小時 15 分" />
                         </div>
-                        <div className="space-y-2 pt-4 border-t border-dashed border-gray-200">
-                            <h5 className="font-bold text-lg text-custom-accent">回程</h5>
-                            <DetailBlock label="路線" value="濟州市 → 台北" />
+                        <div className="space-y-2 p-3 border border-custom-accent/30 rounded-lg bg-custom-light-accent/10">
+                            <h5 className="font-serif-title text-lg text-custom-accent font-bold mb-2">回程 (Return)</h5>
                             <DetailBlock label="日期" value="12 月 8 日 週一" type="date" />
                             <DetailBlock label="時間" value="22:15 - 23:50" />
                             <DetailBlock label="飛行時間" value="2 小時 35 分" />
@@ -370,45 +400,32 @@
                     <InfoCard title="住宿資訊" icon="🏨">
                         
                         {/* 住宿 1 */}
-                        <div className="p-3 bg-custom-light-accent/30 rounded-lg">
-                            <h5 className="font-black text-lg text-custom-dark-text mb-2 border-b border-custom-accent/30 pb-1">第一間住宿</h5>
-                            <DetailBlock label="入住" value="2025 年 12 月 4 日 週四 (16:00後)" type="date" />
-                            <DetailBlock label="退房" value="2025 年 12 月 5 日 週五 (11:00前)" type="date" />
-                            <DetailBlock label="晚數" value="1 晚" />
-                            <DetailBlock label="地址" value="Jeju Island Jeju-si Aewol Coastal-ro 21104" />
+                        <div className="p-4 bg-custom-light-accent/30 rounded-lg border-l-4 border-custom-accent/70">
+                            <h5 className="font-serif-title font-bold text-lg text-custom-dark-text mb-3">第一間住宿</h5>
+                            <DetailBlock label="入住 / 退房" value="12 月 4 日 - 12 月 5 日" type="date" />
+                            <DetailBlock label="地址" value="Aewol Coastal-ro 21104" />
                         </div>
 
                         {/* 住宿 2 */}
-                        <div className="p-3 bg-custom-light-accent/30 rounded-lg">
-                            <h5 className="font-black text-lg text-custom-dark-text mb-2 border-b border-custom-accent/30 pb-1">第二間住宿 (Heyy Seogwipo Hotel)</h5>
-                            <DetailBlock label="入住" value="2025 年 12 月 5 日 週五 (16:00後)" type="date" />
-                            <DetailBlock label="退房" value="2025 年 12 月 6 日 週六 (11:00前)" type="date" />
-                            <DetailBlock label="晚數" value="1 晚" />
-                            <div className="flex justify-between items-start pt-2 border-t border-gray-100/50">
-                                <span className="font-medium text-custom-primary/70 w-1/3">導航連結</span>
-                                <a href="https://map.naver.com/p/entry/place/1639869302?c=17.61,0,0,0,dh&placePath=/home?from=map&fromPanelNum=1&additionalHeight=76&timestamp=202511262236&locale=ko&svcName=map_pcv5&businessCategory=hotel" target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline font-bold text-right w-2/3">查看Naver地圖</a>
-                            </div>
+                        <div className="p-4 bg-custom-light-accent/30 rounded-lg border-l-4 border-custom-accent/70">
+                            <h5 className="font-serif-title font-bold text-lg text-custom-dark-text mb-3">第二間住宿 (Heyy Seogwipo Hotel)</h5>
+                            <DetailBlock label="入住 / 退房" value="12 月 5 日 - 12 月 6 日" type="date" />
+                            <DetailBlock label="導航連結" value="Naver地圖連結" link="https://map.naver.com/p/entry/place/1639869302?c=17.61,0,0,0,dh&placePath=/home?from=map&fromPanelNum=1&additionalHeight=76&timestamp=202511262236&locale=ko&svcName=map_pcv5&businessCategory=hotel" />
                         </div>
 
                         {/* 住宿 3 */}
-                        <div className="p-3 bg-custom-light-accent/30 rounded-lg">
-                            <h5 className="font-black text-lg text-custom-dark-text mb-2 border-b border-custom-accent/30 pb-1">第三間住宿 (濟州機場-Urbanstay)</h5>
-                            <DetailBlock label="入住" value="2025 年 12 月 6 日 週六 (16:00後)" type="date" />
-                            <DetailBlock label="退房" value="2025 年 12 月 8 日 週一 (11:00前)" type="date" />
-                            <DetailBlock label="晚數" value="2 晚" />
-                            <div className="flex justify-between items-start pt-2 border-t border-gray-100/50">
-                                <span className="font-medium text-custom-primary/70 w-1/3">導航連結</span>
-                                <a href="https://naver.me/5S9zc50f" target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline font-bold text-right w-2/3">查看Naver地圖</a>
-                            </div>
+                        <div className="p-4 bg-custom-light-accent/30 rounded-lg border-l-4 border-custom-accent/70">
+                            <h5 className="font-serif-title font-bold text-lg text-custom-dark-text mb-3">第三間住宿 (濟州機場-Urbanstay)</h5>
+                            <DetailBlock label="入住 / 退房" value="12 月 6 日 - 12 月 8 日 (2晚)" type="date" />
+                            <DetailBlock label="導航連結" value="Naver地圖連結" link="https://naver.me/5S9zc50f" />
                         </div>
                     </InfoCard>
 
                     {/* 3. 取車資訊 */}
                     <InfoCard title="取車/還車資訊" icon="🚗">
-                        <DetailBlock label="訂單編號" value="1359039416311386" />
-                        <DetailBlock label="租借期間" value="2025 年 12 月 4 日 07:00 至 12 月 8 日 20:00" />
-                        <DetailBlock label="總天數" value="5 天" />
-                        <DetailBlock label="地點" value="Jeju AutoHouse（92 Yonghae-ro, Cheju, Jeju-do）" />
+                        <DetailBlock label="訂單編號" value="1359039416311386" type="text" />
+                        <DetailBlock label="租借期間" value="12/4 07:00 至 12/8 20:00 (共五天)" />
+                        <DetailBlock label="地點" value="Jeju AutoHouse" link="https://map.naver.com/p/search/Jeju%20AutoHouse" />
                         <DetailBlock label="交通方式" value="有接駁車" />
                     </InfoCard>
 
@@ -416,8 +433,8 @@
                     <InfoCard title="必帶物品清單" icon="🎒">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3">
                             {['護照', '台灣駕照', '國際駕照', '台幣', '信用卡(建議兩張)', '轉接頭', '手機', '換洗衣物', '拖鞋', '布鞋', '盥洗用品(牙刷牙膏)', '常備藥', '雨具', '3C用品', '生理用品'].map((item, index) => (
-                                <div key={index} className="flex items-center text-custom-dark-text font-medium">
-                                    <span className="text-custom-accent mr-2">✓</span> {item}
+                                <div key={index} className="flex items-center text-custom-dark-text font-content font-light">
+                                    <span className="text-custom-accent mr-2 text-lg">›</span> {item}
                                 </div>
                             ))}
                         </div>
@@ -425,23 +442,17 @@
                     
                     {/* 5. 穿搭指南 */}
                     <InfoCard title="冬季穿搭指南" icon="🧥">
-                        <p className="font-extrabold text-custom-dark-text">溫度預估: 5°C - 13°C (體感更低，風強勁)</p>
-                        <p className="text-custom-accent font-bold">原則：洋蔥式穿法（防風、保暖、易穿脫）</p>
-                        <ul className="list-disc list-inside space-y-2 ml-4">
-                            <li className="font-semibold text-custom-dark-text">外層 (防風關鍵)：
-                                <span className="font-normal text-gray-700">防風厚外套或長版羽絨衣。</span>
+                        <p className="font-content font-medium text-custom-dark-text">溫度預估: 5°C - 13°C (海風強勁)</p>
+                        <p className="text-custom-accent font-content font-bold border-l-2 border-custom-accent pl-2 mt-2">原則：洋蔥式穿法（防風、保暖、易穿脫）</p>
+                        <ul className="list-none space-y-2 mt-4">
+                            <li className="font-content">
+                                <span className="font-bold text-custom-dark-text">外層 (防風是關鍵)：</span> 防風厚外套或長版羽絨衣。
                             </li>
-                            <li className="font-semibold text-custom-dark-text">內層 (排汗保暖)：
-                                <span className="font-normal text-gray-700">發熱衣、保暖內衣必備。</span>
+                            <li className="font-content">
+                                <span className="font-bold text-custom-dark-text">內層：</span> 發熱衣、保暖內衣必備。
                             </li>
-                            <li className="font-semibold text-custom-dark-text">中層：
-                                <span className="font-normal text-gray-700">毛衣、厚衛衣。</span>
-                            </li>
-                            <li className="font-semibold text-custom-dark-text">下身：
-                                <span className="font-normal text-gray-700">內刷毛長褲或厚褲襪。</span>
-                            </li>
-                            <li className="font-semibold text-custom-dark-text">配件 (保暖頭頸)：
-                                <span className="font-normal text-gray-700">毛帽 (防風吹頭痛)、圍巾、手套。</span>
+                            <li className="font-content">
+                                <span className="font-bold text-custom-dark-text">配件 (重要)：</span> 毛帽（防風吹頭痛）、圍巾、手套。
                             </li>
                         </ul>
                     </InfoCard>
@@ -452,9 +463,10 @@
         // --- Tab 3: 爬山資訊 (HikingInfoTab) ---
         const HikingInfoTab = () => {
             const DetailBlock = ({ label, value, icon }) => (
-                <div className="flex items-center space-x-2 p-2 bg-custom-base/50 rounded-lg">
+                <div className="flex items-center space-x-2 p-3 bg-custom-base/50 rounded-lg border border-custom-light-accent/50">
+                    {/* Icon: Detail */}
                     <span className="text-xl text-custom-accent">{icon}</span>
-                    <p className="text-sm">
+                    <p className="text-base font-content font-light">
                         <span className="font-medium text-custom-primary/70 mr-1">{label}:</span>
                         <span className="font-bold text-custom-dark-text">{value}</span>
                     </p>
@@ -462,13 +474,17 @@
             );
 
             const PointList = ({ title, items, colorClass }) => (
-                <div className="mt-6">
-                    <h5 className={`text-lg font-black ${colorClass} mb-2`}>{title}</h5>
-                    <ul className="list-disc list-inside space-y-1.5 ml-4 text-sm text-gray-700">
+                <div className="mt-8">
+                    {/* 標題 - Noto Serif TC 粗體 */}
+                    <h5 className={`text-xl font-serif-title font-bold ${colorClass} mb-4 border-l-4 border-current pl-3`}>{title}</h5>
+                    <ul className="list-none space-y-2 ml-2 text-base font-content font-light text-gray-700">
                         {items.map((item, index) => (
-                            <li key={index} className="leading-relaxed">
-                                <span className="font-bold text-custom-dark-text">{item.split('：')[0]}：</span>
-                                {item.split('：').slice(1).join('：')}
+                            <li key={index} className="leading-relaxed flex items-start">
+                                <span className="text-custom-accent mr-2 text-lg">・</span>
+                                <span>
+                                    <span className="font-bold text-custom-dark-text">{item.split('：')[0]}：</span>
+                                    {item.split('：').slice(1).join('：')}
+                                </span>
                             </li>
                         ))}
                     </ul>
@@ -477,26 +493,30 @@
 
             return (
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden p-6 mb-10">
-                    <h2 className="text-3xl font-black text-custom-dark-text border-b border-custom-accent/50 pb-3 mb-6">🏔️ 漢拏山登山攻略</h2>
+                    {/* 主標題 - Noto Serif TC 極粗 */}
+                    <h2 className="text-4xl font-serif-title font-extrabold text-custom-dark-text border-b border-custom-accent/50 pb-3 mb-6">🏔️ 漢拏山登山攻略</h2>
                     
                     {/* 裝備租借 */}
-                    <div className="p-4 bg-custom-light-accent/30 rounded-xl mb-6 shadow-inner">
-                        <h4 className="text-xl font-black text-custom-dark-text mb-3 flex items-center">
+                    <div className="p-4 bg-custom-light-accent/30 rounded-xl mb-8 shadow-inner border border-custom-accent/30">
+                        <h4 className="text-xl font-serif-title text-custom-dark-text mb-4 flex items-center border-b border-custom-accent/50 pb-2">
+                            {/* Icon: Gear */}
                             <span className="mr-2 text-2xl">🎿</span> 裝備租借 (Oshare)
                         </h4>
-                        <DetailBlock label="店家網站" icon="🌐" value={<a href="https://oshare.kr" target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline font-bold">https://oshare.kr</a>} />
-                        <DetailBlock label="領取時間" icon="⏰" value="12/07 19:00" />
-                        <DetailBlock label="歸還時間" icon="↩️" value="12/08 19:00" />
+                        <div className="space-y-3">
+                            <DetailBlock label="店家網站" icon="🌐" value={<a href="https://oshare.kr" target="_blank" rel="noopener noreferrer" className="text-custom-accent hover:underline font-bold font-montserrat">oshare.kr</a>} />
+                            <DetailBlock label="借用時間" icon="⏰" value="12/7 19:00 - 12/8 19:00" />
+                        </div>
                     </div>
 
                     {/* 路線與基本資訊 */}
-                    <div className="p-4 bg-custom-light-accent/30 rounded-xl mb-6 shadow-inner">
-                        <h4 className="text-xl font-black text-custom-dark-text mb-3 border-b border-custom-accent/30 pb-1">ℹ️ 路線概要與預計時程</h4>
-                        <DetailBlock label="路線" icon="➡️" value="御里牧上 (어리목) 靈室下 (영실) - 非登頂路線" />
-                        <DetailBlock label="難度" icon="⭐" value="比較簡單的路線" />
-                        <DetailBlock label="總距離" icon="📏" value="約 12.6 KM" />
-                        <DetailBlock label="預計耗時" icon="⏱️" value="5.5 ~ 6 小時" />
-                        <DetailBlock label="山上氣溫" icon="🥶" value="0°C 至 -10°C (體感更低)" />
+                    <div className="p-4 bg-custom-light-accent/30 rounded-xl mb-8 shadow-inner border border-custom-accent/30">
+                        <h4 className="text-xl font-serif-title text-custom-dark-text mb-4 border-b border-custom-accent/50 pb-2">ℹ️ 路線概要與預計時程</h4>
+                        <div className="space-y-3">
+                            <DetailBlock label="路線" icon="➡️" value="御里牧上 (어리목) 靈室下 (영실) - 非登頂路線" />
+                            <DetailBlock label="總距離" icon="📏" value="約 12.6 KM" />
+                            <DetailBlock label="預計耗時" icon="⏱️" value="5.5 ~ 6 小時" />
+                            <DetailBlock label="山上氣溫" icon="🥶" value="0°C 至 -10°C (體感更低)" />
+                        </div>
                     </div>
                     
                     {/* 穿搭注意事項 */}
@@ -507,10 +527,10 @@
                             "頭部：毛帽（必備）、圍脖（比圍巾好用，不會被風吹散）。",
                             "內層：排汗衣/發熱衣（絕對不要穿棉質，流汗濕了會失溫）。",
                             "中層：刷毛衣 (Fleece) 或輕薄羽絨背心。",
-                            "外層：防風防水外套 (硬殼)，此層最重要。",
-                            "下身：內刷毛的防風登山褲。",
-                            "備用：厚羊毛襪（建議多帶一雙備用，萬一濕了可換）。",
+                            "外層：防風防水外套 (硬殼)，這層最重要。",
+                            "下身：內刷毛的防風登山褲，或運動緊身褲 + 短褲。",
                             "鞋子：高筒防水登山鞋最佳（保護腳踝），搭配租借冰爪。",
+                            "備用：背包裡多放一件厚羽絨外套，休息時穿。",
                         ]}
                     />
 
@@ -546,6 +566,7 @@
                 const timer = setInterval(() => setLiveTime(new Date()), 1000);
                 return () => clearInterval(timer);
             }, []);
+            // 時間使用 Montserrat 字體
             const formattedTime = liveTime.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
             const weather = { location: "濟州市", temp: "18°C", conditions: "多雲/風強", advice: "今日海邊風大，建議穿著防風外套。" };
 
@@ -652,16 +673,17 @@
 
             const days = Object.keys(groupedItinerary).map(Number).sort((a, b) => a - b);
             
-            const TabButton = ({ name, label }) => (
+            const TabButton = ({ name, label, icon }) => (
                 <button
-                    className={`px-6 py-3 font-bold transition-colors text-lg focus:outline-none ${
+                    className={`flex items-center justify-center flex-1 px-4 py-3 font-serif-title text-base sm:text-lg font-bold transition-all focus:outline-none ${
                         currentTab === name
-                            ? 'bg-custom-base text-custom-primary border-b-2 border-custom-accent shadow-inner'
-                            : 'text-gray-500 hover:text-custom-primary/80'
+                            ? 'bg-custom-base text-custom-primary border-b-4 border-custom-accent shadow-inner'
+                            : 'text-gray-500 hover:text-custom-primary/80 bg-custom-light-accent/30'
                     }`}
                     onClick={() => setCurrentTab(name)}
                 >
-                    {label}
+                    {/* Icon: Tab */}
+                    <span className="mr-2 text-xl">{icon}</span> {label}
                 </button>
             );
 
@@ -669,27 +691,31 @@
             return (
                 <div className="bg-custom-base min-h-screen">
                     
-                    {/* 頂部導航/時間/天氣 - 簡潔設計 */}
+                    {/* 頂部資訊區塊 - Montserrat 數字與 Zen Kaku Gothic New 內文 */}
                     <div className="sticky top-0 z-10 bg-white shadow-xl p-4 mb-8 rounded-b-2xl border-b-4 border-custom-accent/30">
                         <div className="flex justify-between items-center max-w-5xl mx-auto">
-                            <h1 className="text-3xl font-black text-custom-dark-text tracking-widest flex items-center">
-                                <span role="img" aria-label="Palm Tree" className="text-3xl mr-3 opacity-80">🌴</span> JEJU TRIP
+                            {/* 主標題 - Noto Serif TC 極粗 */}
+                            <h1 className="text-3xl font-serif-title font-extrabold text-custom-dark-text tracking-widest flex items-center">
+                                {/* Icon: Palm Tree */}
+                                <span role="img" aria-label="Palm Tree" className="text-3xl mr-3 opacity-80">🌴</span> 濟州旅程
                             </h1>
                             <div className="text-right text-custom-primary">
-                                <p className="text-2xl font-extrabold text-custom-accent">{formattedTime}</p>
-                                <p className="text-sm font-medium">{weather.location}: {weather.temp} | {weather.conditions}</p>
+                                {/* 時間 - Montserrat 極粗 */}
+                                <p className="text-2xl font-montserrat font-extrabold text-custom-accent">{formattedTime}</p>
+                                {/* 天氣 - Zen Kaku Gothic New 細體 */}
+                                <p className="text-sm font-content font-light">{weather.location}: {weather.temp} | {weather.conditions}</p>
                             </div>
                         </div>
-                        <p className="text-center text-sm font-light text-custom-primary mt-3 italic border-t border-gray-200 pt-2">{weather.advice}</p>
+                        <p className="text-center text-sm font-content font-light text-custom-primary mt-3 italic border-t border-gray-200 pt-2">{weather.advice}</p>
                     </div>
 
                     <div className="max-w-5xl mx-auto p-4 sm:p-0">
                         
-                        {/* Tab 按鈕 - 高雅設計 */}
-                        <div className="flex border-b border-gray-300 mb-8">
-                            <TabButton name="info" label="重要資訊 / 穿搭" />
-                            <TabButton name="daily" label="每日行程 / 景點" />
-                            <TabButton name="hiking" label="🏔️ 爬山資訊" />
+                        {/* Tab 按鈕 - Noto Serif TC 粗體 */}
+                        <div className="flex border-b-4 border-custom-light-accent mb-8 bg-custom-light-accent/50 rounded-t-xl overflow-hidden shadow-md">
+                            <TabButton name="info" label="重要資訊" icon="✈️" />
+                            <TabButton name="daily" label="每日行程" icon="🗺️" />
+                            <TabButton name="hiking" label="爬山資訊" icon="🏔️" />
                         </div>
 
                         {currentTab === 'info' && <KeyInfoTab FLIGHT_IMAGE_TAIPEI_JEJU={FLIGHT_IMAGE_TAIPEI_JEJU} FLIGHT_IMAGE_JEJU_TAIPEI={FLIGHT_IMAGE_JEJU_TAIPEI} />}
@@ -702,7 +728,9 @@
                                 {/* 1. 新增行程表單 (隱藏/展開式) */}
                                 <div className="border-2 border-custom-accent p-6 rounded-2xl bg-white shadow-xl">
                                     <details>
-                                        <summary className="text-2xl font-bold text-custom-dark-text cursor-pointer pb-2 flex items-center">
+                                        {/* Summary - Noto Serif TC 粗體 */}
+                                        <summary className="text-2xl font-serif-title font-bold text-custom-dark-text cursor-pointer pb-2 flex items-center">
+                                            {/* Icon: Plus */}
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-custom-accent" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                                             </svg>
@@ -712,23 +740,27 @@
                                             <div className="grid grid-cols-1 sm:grid-cols-10 gap-4">
                                                 
                                                 <label className="flex flex-col sm:col-span-2">
-                                                    <span className="text-sm font-medium text-custom-primary mb-1">天數 (Day)</span>
+                                                    {/* Label - Zen Kaku Gothic New 細體 */}
+                                                    <span className="text-sm font-content font-light text-custom-primary mb-1">天數 (Day)</span>
+                                                    {/* Input - Montserrat */}
                                                     <input
                                                         type="number"
                                                         min="1"
                                                         value={newDay}
                                                         onChange={(e) => setNewDay(e.target.value)}
                                                         required
-                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base font-montserrat"
                                                     />
                                                 </label>
 
                                                 <label className="flex flex-col sm:col-span-3">
-                                                    <span className="text-sm font-medium text-custom-primary mb-1">類別</span>
+                                                    {/* Label - Zen Kaku Gothic New 細體 */}
+                                                    <span className="text-sm font-content font-light text-custom-primary mb-1">類別</span>
+                                                    {/* Select - Zen Kaku Gothic New 細體 */}
                                                     <select
                                                         value={newCategory}
                                                         onChange={(e) => setNewCategory(e.target.value)}
-                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base font-content font-light"
                                                         required
                                                     >
                                                         {Object.keys(CATEGORY_MAP).map(key => (
@@ -738,35 +770,40 @@
                                                 </label>
 
                                                 <label className="flex flex-col sm:col-span-5">
-                                                    <span className="text-sm font-medium text-custom-primary mb-1">地點名稱 (必填)</span>
+                                                    {/* Label - Zen Kaku Gothic New 細體 */}
+                                                    <span className="text-sm font-content font-light text-custom-primary mb-1">地點名稱 (必填)</span>
+                                                    {/* Input - Zen Kaku Gothic New 細體 */}
                                                     <input
                                                         type="text"
                                                         value={newLocation}
                                                         onChange={(e) => setNewLocation(e.target.value)}
                                                         placeholder="例如：牛島、漢拏山..."
                                                         required
-                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                        className="p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base font-content font-light"
                                                     />
                                                 </label>
                                             </div>
                                             <label className="flex flex-col">
-                                                <span className="text-sm font-medium text-custom-primary mb-1">備註/活動 (選填)</span>
+                                                {/* Label - Zen Kaku Gothic New 細體 */}
+                                                <span className="text-sm font-content font-light text-custom-primary mb-1">備註/活動 (選填)</span>
+                                                {/* Input - Zen Kaku Gothic New 細體 */}
                                                 <input
                                                     type="text"
                                                     value={newNotes}
                                                     onChange={(e) => setNewNotes(e.target.value)}
                                                     placeholder="例如：租機車環島、午餐吃黑豬肉"
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base"
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-custom-accent focus:border-custom-accent transition duration-150 bg-custom-base font-content font-light"
                                                 />
                                             </label>
                                             <button
                                                 type="submit"
-                                                className="w-full bg-custom-accent hover:bg-custom-primary text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-custom-accent/50"
+                                                className="w-full bg-custom-accent hover:bg-custom-primary text-white font-montserrat font-bold py-3 px-4 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-custom-accent/50"
                                             >
+                                                {/* Icon: Plus */}
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                                                 </svg>
-                                                加入行程
+                                                加入行程 (ADD)
                                             </button>
                                         </form>
                                     </details>
@@ -774,12 +811,14 @@
                                 
                                 {/* 2. 行程顯示區域 */}
                                 <div className="space-y-10 scrollable-planner">
-                                    <h2 className="text-3xl font-black text-custom-dark-text border-b border-custom-accent/30 pb-3 flex items-center">
+                                    {/* 區塊標題 - Noto Serif TC 粗體 */}
+                                    <h2 className="text-3xl font-serif-title font-bold text-custom-dark-text border-b border-custom-accent/30 pb-3 flex items-center">
+                                        {/* Icon: Map Pin */}
                                         <span role="img" aria-label="Map Pin" className="text-xl mr-2 opacity-70">🗺️</span> 完整行程細節 ({days.length} 天)
                                     </h2>
                                     
                                     {days.length === 0 ? (
-                                        <p className="text-custom-primary/70 italic p-6 bg-white rounded-xl text-center shadow-inner">目前沒有任何行程，請在上方新增項目。</p>
+                                        <p className="text-custom-primary/70 italic p-6 bg-white rounded-xl text-center shadow-inner font-content">目前沒有任何行程，請在上方新增項目。</p>
                                     ) : (
                                         days.map(day => (
                                             <DayPlanner 
@@ -803,11 +842,11 @@
                         <button
                             className="fixed bottom-6 right-6 bg-custom-accent hover:bg-custom-primary text-white p-4 rounded-full shadow-2xl transition duration-300 transform hover:scale-110 active:scale-90 focus:outline-none focus:ring-4 focus:ring-custom-accent/70"
                             onClick={() => {
-                                // 滾動到新增表單
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             title="新增行程"
                         >
+                            {/* Icon: Plus */}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                             </svg>
