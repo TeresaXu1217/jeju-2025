@@ -11,16 +11,17 @@
     <!-- 強制載入 Tailwind CSS (解決純文字) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 設定顏色 -->
+    <!-- 設定顏色：加深了文字顏色以避免與背景打架 -->
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              wine: '#86473F',
-              coffee: '#B35C37',
-              bg: '#F5F4F0',
-              text: '#4A4843'
+              wine: '#86473F',   /* 酒紅 */
+              coffee: '#B35C37', /* 深咖 */
+              bg: '#F5F4F0',     /* 米白背景 */
+              text: '#333333',   /* 加深文字顏色，避免看不清楚 */
+              'text-light': '#666666'
             },
             fontFamily: {
               sans: ['Zen Maru Gothic', 'sans-serif'],
@@ -34,7 +35,7 @@
     <!-- 載入字體 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;500;700&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="root"></div>
