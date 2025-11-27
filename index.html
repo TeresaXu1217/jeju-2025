@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>濟州島旅程規劃 JEJU 2025</title>
     
-    <!-- 1. 設定 Import Map: 告訴瀏覽器去哪裡找 React 和其他套件 -->
+    <!-- 1. Import Map: 新增了 firebase/auth 和 firebase/storage -->
     <script type="importmap">
     {
       "imports": {
@@ -14,12 +14,14 @@
         "framer-motion": "https://esm.sh/framer-motion@10.16.4",
         "lucide-react": "https://esm.sh/lucide-react@0.292.0",
         "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
-        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js",
+        "firebase/storage": "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"
       }
     }
     </script>
 
-    <!-- 2. 載入 Tailwind CSS -->
+    <!-- 2. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -48,10 +50,10 @@
         }
     </script>
 
-    <!-- 3. 載入 Babel (用於解析 JSX) -->
+    <!-- 3. Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 4. 載入字體 -->
+    <!-- 4. Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;500;700&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
@@ -61,31 +63,47 @@
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        /* 避免載入時閃爍 */
-        #root:empty { opacity: 0; }
         #root { transition: opacity 0.5s ease; opacity: 1; }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <!-- 5. React 應用程式邏輯 -->
+    <!-- 5. React App -->
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect } from 'react';
+        import React, { useState, useEffect, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
         import { motion, AnimatePresence } from 'framer-motion';
         import {
             MapPin, Clock, ExternalLink, Menu, X, ChevronRight,
             Wind, Coffee, Mountain, ShoppingBag, Calendar,
             Plane, Bed, Car, Shirt, Snowflake, Utensils, AlertCircle,
-            ThermometerSun, Edit3, Save, CloudSun, Search
+            ThermometerSun, Edit3, Save, CloudSun, Search,
+            Lock, Unlock, Camera, Upload
         } from 'lucide-react';
 
-        // --- Firebase 設置 ---
+        // --- Firebase ---
         import { initializeApp } from "firebase/app";
-        import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "firebase/firestore";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+        import { getAuth, signInAnonymously } from "firebase/auth";
 
-        // TODO: 請替換為您的 Firebase Config
+        // TODO: 請填入您的 Firebase Config
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -95,26 +113,105 @@
             appId: "YOUR_APP_ID"
         };
 
-        // 初始化 Firebase (容錯處理)
-        let db = null;
+        let db, storage, auth;
+        // 初始化檢查
         if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                console.log("Firebase initialized");
+                storage = getStorage(app);
+                auth = getAuth(app);
+                // 匿名登入以確保有權限存取
+                signInAnonymously(auth).catch(console.error);
+                console.log("Firebase services initialized");
             } catch (error) {
                 console.error("Firebase init error:", error);
             }
         }
 
-        // --- 日系背景組件 ---
+        // --- 日系背景 ---
         const JapaneseTexture = () => (
             <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03] mix-blend-multiply"
                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
             </div>
         );
 
-        // --- 資料結構 (Day 1 - Day 5) ---
+        // --- 可編輯圖片組件 (Editable Image Component) ---
+        const EditableImage = ({ id, src, alt, className, isEditing, customImages }) => {
+            const [uploading, setUploading] = useState(false);
+            const fileInputRef = useRef(null);
+
+            // 優先顯示自訂圖片，若無則顯示預設圖片
+            const displaySrc = customImages && customImages[id] ? customImages[id] : src;
+
+            const handleClick = () => {
+                if (isEditing && !uploading) {
+                    fileInputRef.current.click();
+                }
+            };
+
+            const handleFileChange = async (e) => {
+                const file = e.target.files[0];
+                if (!file || !storage || !db) return;
+
+                setUploading(true);
+                try {
+                    // 1. 上傳到 Storage
+                    const storageRef = ref(storage, `site_images/${id}_${Date.now()}`);
+                    await uploadBytes(storageRef, file);
+                    const url = await getDownloadURL(storageRef);
+
+                    // 2. 更新 Firestore 對應表
+                    // 我們將所有圖片對應存在一個 'config/images' 文件中
+                    await setDoc(doc(db, 'config', 'images'), {
+                        [id]: url
+                    }, { merge: true });
+
+                    alert('圖片更新成功！');
+                } catch (error) {
+                    console.error("Upload failed:", error);
+                    alert('上傳失敗，請檢查 Firebase Storage 權限與設定。');
+                } finally {
+                    setUploading(false);
+                }
+            };
+
+            return (
+                <div className={`relative ${className} group overflow-hidden`}>
+                    <img 
+                        src={displaySrc} 
+                        alt={alt} 
+                        className={`w-full h-full object-cover transition-all duration-500 ${isEditing ? 'brightness-50' : ''}`} 
+                    />
+                    
+                    {/* 編輯模式遮罩 */}
+                    {isEditing && (
+                        <div 
+                            onClick={handleClick}
+                            className="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-black/20 transition-colors z-20"
+                        >
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileChange} 
+                                className="hidden" 
+                                accept="image/*"
+                            />
+                            <div className="bg-white/90 text-black px-4 py-2 rounded-full flex items-center shadow-lg hover:scale-105 transition-transform">
+                                {uploading ? (
+                                    <div className="spinner mr-2 border-gray-400 border-t-black"></div>
+                                ) : (
+                                    <Camera size={20} className="mr-2" />
+                                )}
+                                <span className="text-sm font-bold">{uploading ? '上傳中...' : '更換圖片'}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- 資料結構 (保持不變) ---
         const INFO_DATA = {
             flights: [
                 { id: 'outbound', title: '去程：台北 (TPE) - 濟州 (CJU)', date: '12月4日 (週四)', time: '02:50 - 06:05', duration: '2小時 15分', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop' },
@@ -263,23 +360,20 @@
 
         // --- 組件開始 ---
 
-        // 詳細資訊彈窗 (Modal) - 包含 Firebase 儲存功能
-        function DetailModal({ isOpen, onClose, data }) {
+        // 詳細資訊彈窗 (Modal)
+        function DetailModal({ isOpen, onClose, data, isEditing, customImages }) {
             const [note, setNote] = useState('');
             const [isSaving, setIsSaving] = useState(false);
 
-            // 當視窗打開時，嘗試讀取筆記
             useEffect(() => {
                 const fetchNote = async () => {
                     if (isOpen && data) {
-                        setNote(''); // Reset first
+                        setNote('');
                         const id = `jeju-note-${data.place || data.name}`;
                         
-                        // 1. 嘗試從 LocalStorage 讀取 (作為快取/後備)
                         const localNote = localStorage.getItem(id);
                         if (localNote) setNote(localNote);
 
-                        // 2. 如果 Firebase 已連線，嘗試從雲端讀取 (覆蓋 LocalStorage)
                         if (db) {
                             try {
                                 const docRef = doc(db, "notes", id);
@@ -288,7 +382,7 @@
                                     setNote(docSnap.data().content);
                                 }
                             } catch (e) {
-                                console.log("Firestore read error (using local):", e);
+                                console.log("Firestore read error:", e);
                             }
                         }
                     }
@@ -300,11 +394,8 @@
                 setIsSaving(true);
                 if (data) {
                     const id = `jeju-note-${data.place || data.name}`;
-                    
-                    // 1. 寫入 LocalStorage (立即生效)
                     localStorage.setItem(id, note);
 
-                    // 2. 寫入 Firebase (如果已設置)
                     if (db) {
                         try {
                             await setDoc(doc(db, "notes", id), { 
@@ -314,10 +405,9 @@
                             alert("✅ 雲端儲存成功！");
                         } catch (e) {
                             console.error("Firestore save error:", e);
-                            alert("⚠️ 無法連線至雲端，已儲存於本機。請檢查 Firebase Config。");
+                            alert("⚠️ 無法連線至雲端，已儲存於本機。");
                         }
                     } else {
-                        // 模擬延遲體驗
                         setTimeout(() => {
                             alert("✅ 已儲存 (目前為本機模式，設定 Firebase Key 後即可同步雲端)！");
                         }, 500);
@@ -349,13 +439,17 @@
                                 </button>
 
                                 <div className="h-64 w-full relative flex-shrink-0">
-                                    <img
+                                    {/* Modal 內部的圖片也支援編輯 */}
+                                    <EditableImage 
+                                        id={data.place || data.name}
                                         src={data.image || 'https://images.unsplash.com/photo-1528629297340-d1d466945dc5?q=80&w=2000'}
                                         alt={data.place || data.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full"
+                                        isEditing={isEditing}
+                                        customImages={customImages}
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#F5F4F0] to-transparent" />
-                                    <div className="absolute bottom-6 left-6 right-6">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#F5F4F0] to-transparent pointer-events-none" />
+                                    <div className="absolute bottom-6 left-6 right-6 pointer-events-none">
                                         <h2 className="text-3xl font-serif text-[#2C2C2C] mb-2">{data.place || data.name}</h2>
                                         <p className="text-[#666] tracking-widest uppercase text-sm">{data.title || data.desc?.slice(0, 15)}</p>
                                     </div>
@@ -438,6 +532,22 @@
             const [isMenuOpen, setIsMenuOpen] = useState(false);
             const [modalOpen, setModalOpen] = useState(false);
             const [modalData, setModalData] = useState(null);
+            
+            // --- 編輯模式狀態 ---
+            const [isEditing, setIsEditing] = useState(false);
+            const [customImages, setCustomImages] = useState({});
+
+            // 監聽 Firestore 圖片變更
+            useEffect(() => {
+                if (db) {
+                    const unsub = onSnapshot(doc(db, 'config', 'images'), (docSnap) => {
+                        if (docSnap.exists()) {
+                            setCustomImages(docSnap.data());
+                        }
+                    });
+                    return () => unsub();
+                }
+            }, []);
 
             const handleNav = (category, day = null) => {
                 setActiveCategory(category);
@@ -478,13 +588,26 @@
                                     )}
                                 </button>
                             ))}
-                            <button 
-                                onClick={openWeather}
-                                className="flex items-center space-x-1 text-[#64B5F6] hover:text-[#42A5F5] transition-colors bg-white border border-blue-100 px-3 py-1.5 rounded-full shadow-sm"
-                            >
-                                <CloudSun size={16} />
-                                <span className="text-xs">Weather</span>
-                            </button>
+                            
+                            {/* 工具按鈕區 */}
+                            <div className="flex items-center space-x-3">
+                                <button 
+                                    onClick={openWeather}
+                                    className="flex items-center space-x-1 text-[#64B5F6] hover:text-[#42A5F5] transition-colors bg-white border border-blue-100 px-3 py-1.5 rounded-full shadow-sm"
+                                >
+                                    <CloudSun size={16} />
+                                    <span className="text-xs">Weather</span>
+                                </button>
+
+                                {/* 編輯模式開關 */}
+                                <button 
+                                    onClick={() => setIsEditing(!isEditing)}
+                                    className={`p-2 rounded-full transition-all ${isEditing ? 'bg-red-50 text-red-500 ring-2 ring-red-100' : 'text-gray-400 hover:text-gray-600'}`}
+                                    title={isEditing ? "關閉編輯模式" : "開啟圖片編輯模式"}
+                                >
+                                    {isEditing ? <Unlock size={18} /> : <Lock size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <button className="md:hidden text-[#2C2C2C]" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -516,19 +639,28 @@
                                         <ChevronRight size={20} />
                                     </button>
                                 ))}
-                                <button
-                                   onClick={openWeather}
-                                   className="text-xl serif-font text-left text-[#64B5F6] flex justify-between items-center pb-4"
+                                {/* Mobile Edit Toggle */}
+                                <button 
+                                    onClick={() => { setIsEditing(!isEditing); setIsMenuOpen(false); }}
+                                    className={`text-xl serif-font text-left flex justify-between items-center pb-4 ${isEditing ? 'text-red-500' : 'text-[#666]'}`}
                                 >
-                                   <span className="flex items-center"><CloudSun className="mr-3"/> 即時天氣</span>
-                                   <ExternalLink size={20}/>
+                                    <span className="flex items-center">
+                                        {isEditing ? <Unlock className="mr-3"/> : <Lock className="mr-3"/>} 
+                                        {isEditing ? '關閉編輯模式' : '開啟圖片編輯'}
+                                    </span>
                                 </button>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
                     <main className="relative z-10 pt-16 pb-20">
-                        {activeCategory === 'home' && <HomeView onNavigate={handleNav} />}
+                        {activeCategory === 'home' && (
+                            <HomeView 
+                                onNavigate={handleNav} 
+                                isEditing={isEditing} 
+                                customImages={customImages} 
+                            />
+                        )}
                         {activeCategory === 'info' && <InfoView data={INFO_DATA} />}
                         {activeCategory === 'schedule' && (
                             <ScheduleView
@@ -536,6 +668,8 @@
                                 activeDay={activeDay}
                                 onDayChange={setActiveDay}
                                 onItemClick={openModal}
+                                isEditing={isEditing}
+                                customImages={customImages}
                             />
                         )}
                         {activeCategory === 'hiking' && <HikingView data={HIKING_DATA} />}
@@ -545,6 +679,8 @@
                         isOpen={modalOpen}
                         onClose={() => setModalOpen(false)}
                         data={modalData}
+                        isEditing={isEditing}
+                        customImages={customImages}
                     />
 
                     <footer className="py-12 text-center text-[#999] text-xs tracking-[0.2em] border-t border-[#E6E4DD] mt-20 bg-[#F5F4F0]">
@@ -555,17 +691,23 @@
         }
 
         // Sub-Views
-        function HomeView({ onNavigate }) {
+        function HomeView({ onNavigate, isEditing, customImages }) {
             return (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
                     <div className="relative w-full h-[90vh] overflow-hidden">
-                        <div className="absolute inset-0 bg-black/20 z-10" />
-                        <img
+                        <div className="absolute inset-0 bg-black/20 z-10 pointer-events-none" />
+                        
+                        {/* 使用 EditableImage 取代原本的 img */}
+                        <EditableImage
+                            id="home-hero"
                             src="https://images.unsplash.com/photo-1528629297340-d1d466945dc5?q=80&w=2244&auto=format&fit=crop"
                             alt="Jeju Hero"
-                            className="w-full h-full object-cover animate-pan-slow"
+                            className="w-full h-full animate-pan-slow"
+                            isEditing={isEditing}
+                            customImages={customImages}
                         />
-                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white text-center px-4">
+
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white text-center px-4 pointer-events-none">
                             <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}>
                                 <h2 className="text-sm tracking-[0.3em] mb-6 uppercase">December 4 - 8, 2025</h2>
                                 <h1 className="text-6xl md:text-8xl serif-font font-thin mb-8 tracking-widest">
@@ -576,13 +718,15 @@
                                     這是一段關於自然、咖啡與自我的對話。
                                 </p>
                             </motion.div>
-                            <motion.button
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
-                                onClick={() => onNavigate('schedule')}
-                                className="mt-16 px-8 py-3 border border-white/30 hover:bg-white hover:text-black transition-all text-sm tracking-[0.2em] backdrop-blur-sm"
-                            >
-                                VIEW ITINERARY
-                            </motion.button>
+                            <div className="pointer-events-auto">
+                                <motion.button
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
+                                    onClick={() => onNavigate('schedule')}
+                                    className="mt-16 px-8 py-3 border border-white/30 hover:bg-white hover:text-black transition-all text-sm tracking-[0.2em] backdrop-blur-sm"
+                                >
+                                    VIEW ITINERARY
+                                </motion.button>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
@@ -782,7 +926,7 @@
             );
         }
 
-        function ScheduleView({ schedule, activeDay, onDayChange, onItemClick }) {
+        function ScheduleView({ schedule, activeDay, onDayChange, onItemClick, isEditing, customImages }) {
             const dayData = schedule[activeDay];
             return (
                 <div className="min-h-screen">
@@ -805,9 +949,19 @@
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
                         className="relative h-[40vh] md:h-[50vh] w-full"
                     >
-                        <div className="absolute inset-0 bg-black/20" />
-                        <img src={dayData.banner} alt="Banner" className="w-full h-full object-cover" />
-                        <div className="absolute bottom-0 left-0 p-8 md:p-12 text-white bg-gradient-to-t from-black/60 to-transparent w-full">
+                        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+                        
+                        {/* Day Banner 使用 EditableImage */}
+                        <EditableImage
+                            id={`banner-${activeDay}`}
+                            src={dayData.banner}
+                            alt="Banner"
+                            className="w-full h-full"
+                            isEditing={isEditing}
+                            customImages={customImages}
+                        />
+
+                        <div className="absolute bottom-0 left-0 p-8 md:p-12 text-white bg-gradient-to-t from-black/60 to-transparent w-full pointer-events-none">
                             <p className="tracking-[0.2em] text-sm mb-2 opacity-80">{dayData.date} • {dayData.id.toUpperCase()}</p>
                             <h2 className="text-3xl md:text-5xl serif-font font-light">{dayData.title}</h2>
                         </div>
@@ -843,15 +997,15 @@
                             </div>
                         </div>
 
-                        <HorizontalSection title="Nearby Food 美食" icon={<Utensils size={16}/>} items={dayData.food} onItemClick={onItemClick} />
-                        <HorizontalSection title="Coffee & Dessert 咖啡甜點" icon={<Coffee size={16}/>} items={dayData.cafe} onItemClick={onItemClick} />
-                        <HorizontalSection title="Backup Plan 備案" icon={<AlertCircle size={16}/>} items={dayData.backup} onItemClick={onItemClick} />
+                        <HorizontalSection title="Nearby Food 美食" icon={<Utensils size={16}/>} items={dayData.food} onItemClick={onItemClick} isEditing={isEditing} customImages={customImages} />
+                        <HorizontalSection title="Coffee & Dessert 咖啡甜點" icon={<Coffee size={16}/>} items={dayData.cafe} onItemClick={onItemClick} isEditing={isEditing} customImages={customImages} />
+                        <HorizontalSection title="Backup Plan 備案" icon={<AlertCircle size={16}/>} items={dayData.backup} onItemClick={onItemClick} isEditing={isEditing} customImages={customImages} />
                     </div>
                 </div>
             );
         }
 
-        function HorizontalSection({ title, icon, items, onItemClick }) {
+        function HorizontalSection({ title, icon, items, onItemClick, isEditing, customImages }) {
             if (!items || items.length === 0) return null;
             return (
                 <section>
@@ -865,8 +1019,16 @@
                                 onClick={() => onItemClick(item)}
                                 className="flex-shrink-0 w-64 bg-white border border-[#E6E4DD] p-5 rounded snap-center hover:shadow-md transition-shadow cursor-pointer group"
                             >
-                                <div className="h-32 mb-4 overflow-hidden rounded bg-[#F5F5F5]">
-                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                                <div className="h-32 mb-4 overflow-hidden rounded bg-[#F5F5F5] relative">
+                                    {/* 列表圖片也支援編輯 */}
+                                    <EditableImage 
+                                        id={item.name}
+                                        src={item.image} 
+                                        alt={item.name} 
+                                        className="w-full h-full"
+                                        isEditing={isEditing}
+                                        customImages={customImages}
+                                    />
                                 </div>
                                 <h4 className="font-bold text-[#333] mb-1">{item.name}</h4>
                                 <p className="text-sm text-[#666] mb-4 h-10 overflow-hidden line-clamp-2">{item.desc}</p>
