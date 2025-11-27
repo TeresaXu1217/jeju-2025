@@ -8,19 +8,19 @@
     <meta name="description" content="Jeju Trip 2025" />
     <title>Jeju Trip 2025</title>
     
-    <!-- 關鍵修復：強制載入 Tailwind CSS 樣式 -->
+    <!-- 強制載入 Tailwind CSS (解決純文字) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 設定您的專屬顏色 (酒紅與深咖) -->
+    <!-- 設定顏色 -->
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              wine: '#86473F',   /* 酒紅 */
-              coffee: '#B35C37', /* 深咖 */
-              bg: '#F5F4F0',     /* 米白背景 */
-              text: '#4A4843'    /* 深灰文字 */
+              wine: '#86473F',
+              coffee: '#B35C37',
+              bg: '#F5F4F0',
+              text: '#4A4843'
             },
             fontFamily: {
               sans: ['Zen Maru Gothic', 'sans-serif'],
@@ -37,7 +37,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;500;700&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>
 </html>
