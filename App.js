@@ -4,15 +4,17 @@ import {
   MapPin, Clock, ExternalLink, Menu, X, ChevronRight, 
   Wind, Coffee, Mountain, ShoppingBag, Calendar, 
   Plane, Bed, Car, Shirt, Snowflake, Utensils, AlertCircle,
-  ThermometerSun, Edit3, Save, Info
+  ThermometerSun, Edit3, Save, Info, CheckCircle
 } from 'lucide-react';
 
+// --- 背景紋理 (降低透明度，避免干擾文字) ---
 const JapaneseTexture = () => (
-  <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.03] mix-blend-multiply" 
+  <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02] mix-blend-multiply" 
        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
   </div>
 );
 
+// --- 行程資料 ---
 const INFO_DATA = {
   flights: [
     { id: 'outbound', title: '去程：台北 (TPE) - 濟州 (CJU)', date: '12月4日 (週四)', time: '02:50 - 06:05', duration: '2小時 15分', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop' },
@@ -97,7 +99,7 @@ const SCHEDULE_DATA = {
     ]
   },
   day3: {
-    id: 'day3', date: '12/06', title: 'Day 3: 牛島 & 城山', banner: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2000',
+    id: 'day3', date: '12/06', title: 'Day 3: 牛島 & 城山', banner: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2070&auto=format&fit=crop',
     items: [
       { time: '08:00', title: '出發', place: '城山港', note: '前往牛島的碼頭', link: 'https://map.naver.com/p/search/성산포항종합여객터미널', desc: '請在此填寫乘船申報單 (一式兩份，來回各一張)，並連同護照、現金購買船票。', tips: ['一定要帶護照！', '確認末班船時間'], image: 'https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?q=80&w=2000&auto=format&fit=crop' },
       { time: '10:20', title: '環島', place: '牛島 Udo', note: '租電動車/腳踏車', link: 'https://map.naver.com/p/search/우도', desc: '濟州的離島，海水清澈見底。租一台可愛的電動車環島是最好的方式。', tips: ['租車需出示國際駕照', '推薦西濱白沙、下古水洞海灘'], image: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2000&auto=format&fit=crop' },
@@ -117,9 +119,9 @@ const SCHEDULE_DATA = {
     ]
   },
   day4: {
-    id: 'day4', date: '12/07', title: 'Day 4: 漢拏山健行', banner: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2000',
-    items: [
-      { time: '07:00', title: '出發', place: '御里牧登山口', desc: '早起出發，準備爬山。', link: 'https://map.naver.com/p/search/어리목탐방로', image: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?q=80&w=2000' },
+    id: 'day4', date: '12/07', title: 'Day 4: 漢拏山健行', banner: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2070&auto=format&fit=crop',
+    route: [
+      { time: '07:00', title: '移動', place: '前往御里牧', note: 'Eorimok Trailhead', link: 'https://map.naver.com/p/search/어리목탐방로', desc: '建議早起出發，避免登山口停車場客滿。若搭公車請確認 240 號公車時刻表。', tips: ['車程約 30-40 分鐘', '早餐要吃飽'], image: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?q=80&w=2000&auto=format&fit=crop' },
       { time: '07:30', title: '登山', place: '開始爬山', note: '御里牧路線上山', link: '', desc: '剛開始是一段森林路，之後視野會開闊。務必在入口處穿好冰爪。', tips: ['注意保暖', '適時補充水分'], image: 'https://images.unsplash.com/photo-1516655855035-d5215bcb5604?q=80&w=2000&auto=format&fit=crop' },
       { time: '全天', title: '健行', place: '御里牧 - 靈室', note: '享受雪景與挑戰', link: '', desc: '抵達威瑟岳避難所後，可以休息吃泡麵（需自備熱水）。下山走靈室路線，風景如畫。', tips: ['避難所有廁所', '垃圾請自行帶下山'], image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2000&auto=format&fit=crop' },
       { time: '傍晚', title: '下山', place: '靈室登山口', note: 'Yeongsil Trailhead', link: 'https://map.naver.com/p/search/영실탐방로', desc: '下山後需走到停車場或公車站。若太累可請計程車排班處叫車。', tips: [], image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop' },
@@ -171,7 +173,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text font-sans selection:bg-[#D4D1C9] selection:text-[#2C2C2C]">
+    <div className="min-h-screen bg-bg text-text font-sans selection:bg-wine selection:text-white">
       <JapaneseTexture />
       <nav className="fixed top-0 left-0 right-0 z-40 bg-bg/95 backdrop-blur-md border-b border-[#E6E4DD] h-16 flex items-center justify-between px-6 transition-all duration-300">
         <div className="text-xl tracking-widest serif-font cursor-pointer font-bold text-text" onClick={() => handleNav('home')}>JEJU 2025</div>
@@ -224,20 +226,63 @@ function WeatherWidget() {
 
 function DetailModal({ isOpen, onClose, data }) {
   const [note, setNote] = useState('');
-  useEffect(() => { if (data) setNote(localStorage.getItem(`jeju-note-${data.place || data.name}`) || ''); }, [data]);
-  const handleNoteChange = (e) => { const v = e.target.value; setNote(v); localStorage.setItem(`jeju-note-${data.place || data.name}`, v); };
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      // 確保使用唯一的 ID 作為 Key，避免衝突
+      const key = `jeju-note-${data.id || data.place}`;
+      setNote(localStorage.getItem(key) || '');
+      setSaved(false);
+    }
+  }, [data]);
+
+  const handleNoteChange = (e) => {
+    const val = e.target.value;
+    setNote(val);
+    const key = `jeju-note-${data.id || data.place}`;
+    localStorage.setItem(key, val);
+    setSaved(true);
+    // 1秒後隱藏儲存提示
+    setTimeout(() => setSaved(false), 2000);
+  };
+
   if (!isOpen || !data) return null;
+
   return (
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-bg w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
-          <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-white/50 p-2 rounded-full hover:bg-white transition-colors"><X size={20} /></button>
-          <div className="h-64 md:h-80 w-full relative"><img src={data.image || 'https://images.unsplash.com/photo-1528629297340-d1d466945dc5?q=80&w=2000'} alt={data.place || data.name} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-bg to-transparent" /><div className="absolute bottom-6 left-6 right-6"><h2 className="text-3xl md:text-4xl serif-font text-text mb-2">{data.place || data.name}</h2><p className="text-[#666] tracking-widest uppercase text-sm">{data.title || data.desc?.slice(0, 20)}</p></div></div>
-          <div className="p-6 md:p-8 space-y-8">
-            <div><h3 className="text-sm font-bold tracking-[0.2em] text-[#888] uppercase mb-3 flex items-center"><Info size={16} className="mr-2"/> About</h3><p className="text-[#444] leading-relaxed text-lg font-light">{data.desc || "暫無詳細介紹"}</p></div>
-            {data.tips && <div className="bg-[#EBE9E4]/40 p-5 rounded-lg border border-[#E6E4DD]"><h3 className="text-sm font-bold tracking-[0.2em] text-[#888] uppercase mb-3 flex items-center"><AlertCircle size={16} className="mr-2"/> Travel Tips</h3><ul className="space-y-2">{data.tips.map((tip, i) => <li key={i} className="flex items-start text-sm text-[#555]"><span className="mr-2 text-wine">•</span> {tip}</li>)}</ul></div>}
-            <div><h3 className="text-sm font-bold tracking-[0.2em] text-wine uppercase mb-3 flex items-center"><Edit3 size={16} className="mr-2"/> My Notes (可編輯)</h3><div className="relative"><textarea value={note} onChange={handleNoteChange} placeholder="在此貼上您的備註..." className="w-full h-32 p-4 bg-white border border-[#DDD] rounded focus:outline-none focus:border-wine text-sm leading-relaxed resize-none"/><div className="absolute bottom-3 right-3 text-xs text-[#999] flex items-center"><Save size={12} className="mr-1"/> Auto-saved</div></div></div>
-            <div className="pt-6 border-t border-[#E6E4DD] flex justify-end">{data.link ? <a href={data.link} target="_blank" rel="noreferrer" className="flex items-center space-x-2 bg-wine text-white px-6 py-3 rounded hover:bg-coffee transition-colors shadow-lg shadow-wine/20"><span>Open Naver Map</span> <ExternalLink size={16} /></a> : <button disabled className="bg-[#EEE] text-[#AAA] px-6 py-3 rounded cursor-not-allowed">No Link</button>}</div>
+        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-white transition-colors text-gray-800"><X size={20} /></button>
+          
+          <div className="h-64 md:h-80 w-full relative">
+            <img src={data.image || 'https://images.unsplash.com/photo-1528629297340-d1d466945dc5?q=80&w=2000'} alt={data.place || data.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+            <div className="absolute bottom-6 left-6 right-6">
+              <h2 className="text-3xl md:text-4xl serif-font text-white mb-2 shadow-sm">{data.place || data.name}</h2>
+              <p className="text-white/80 tracking-widest uppercase text-sm font-medium">{data.title || data.desc?.slice(0, 20)}</p>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8 space-y-8 bg-white">
+            <div>
+              <h3 className="text-sm font-bold tracking-[0.2em] text-[#888] uppercase mb-3 flex items-center"><Info size={16} className="mr-2"/> About</h3>
+              <p className="text-text leading-relaxed text-lg font-light">{data.desc || "暫無詳細介紹"}</p>
+            </div>
+
+            {data.tips && <div className="bg-[#EBE9E4]/60 p-5 rounded-lg border border-[#E6E4DD]"><h3 className="text-sm font-bold tracking-[0.2em] text-[#888] uppercase mb-3 flex items-center"><AlertCircle size={16} className="mr-2"/> Travel Tips</h3><ul className="space-y-2">{data.tips.map((tip, i) => <li key={i} className="flex items-start text-sm text-text"><span className="mr-2 text-wine font-bold">•</span> {tip}</li>)}</ul></div>}
+            
+            <div>
+               <div className="flex justify-between items-center mb-3">
+                 <h3 className="text-sm font-bold tracking-[0.2em] text-wine uppercase flex items-center"><Edit3 size={16} className="mr-2"/> My Notes</h3>
+                 {saved && <span className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded"><CheckCircle size={12} className="mr-1"/> 已自動儲存</span>}
+               </div>
+               <textarea value={note} onChange={handleNoteChange} placeholder="在此貼上您的備註..." className="w-full h-32 p-4 bg-white border border-[#DDD] rounded focus:outline-none focus:border-wine focus:ring-1 focus:ring-wine text-sm leading-relaxed resize-none text-text"/>
+            </div>
+
+            <div className="pt-6 border-t border-[#E6E4DD] flex justify-end">
+              {data.link ? <a href={data.link} target="_blank" rel="noreferrer" className="flex items-center space-x-2 bg-wine text-white px-6 py-3 rounded hover:bg-coffee transition-colors shadow-lg shadow-wine/20"><span>Open Naver Map</span> <ExternalLink size={16} /></a> : <button disabled className="bg-[#EEE] text-[#AAA] px-6 py-3 rounded cursor-not-allowed">No Link</button>}
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -249,15 +294,15 @@ function HomeView({ onNavigate }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
       <div className="relative w-full h-[90vh] overflow-hidden">
-        <div className="absolute inset-0 bg-black/20 z-10" />
+        <div className="absolute inset-0 bg-black/30 z-10" />
         <img src="https://images.unsplash.com/photo-1528629297340-d1d466945dc5?q=80&w=2244&auto=format&fit=crop" alt="Jeju Hero" className="w-full h-full object-cover animate-pan-slow" />
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white text-center px-4">
           <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}>
-            <h2 className="text-sm tracking-[0.3em] mb-6 uppercase">December 4 - 8, 2025</h2>
-            <h1 className="text-6xl md:text-8xl serif-font font-thin mb-8 tracking-widest">濟州島</h1>
-            <p className="max-w-md mx-auto text-sm leading-loose opacity-90 font-light tracking-wide border-l border-white/50 pl-6 text-left">從西岸的海風到漢拏山的雪白。<br/>這是一段關於自然、咖啡與自我的對話。</p>
+            <h2 className="text-sm tracking-[0.3em] mb-6 uppercase text-white/90">December 4 - 8, 2025</h2>
+            <h1 className="text-6xl md:text-8xl serif-font font-thin mb-8 tracking-widest text-white drop-shadow-md">濟州島</h1>
+            <p className="max-w-md mx-auto text-sm leading-loose opacity-90 font-light tracking-wide border-l border-white/50 pl-6 text-left text-white">從西岸的海風到漢拏山的雪白。<br/>這是一段關於自然、咖啡與自我的對話。</p>
           </motion.div>
-          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} onClick={() => onNavigate('schedule')} className="mt-16 px-8 py-3 border border-white/30 hover:bg-white hover:text-black transition-all text-sm tracking-[0.2em] backdrop-blur-sm">VIEW ITINERARY</motion.button>
+          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} onClick={() => onNavigate('schedule')} className="mt-16 px-8 py-3 border border-white/50 bg-white/10 hover:bg-white hover:text-black transition-all text-sm tracking-[0.2em] backdrop-blur-sm text-white">VIEW ITINERARY</motion.button>
         </div>
       </div>
     </motion.div>
@@ -268,10 +313,10 @@ function InfoView({ data }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto px-6 py-12 space-y-20">
       <div className="text-center space-y-4"><h2 className="text-3xl serif-font text-text">Trip Essentials</h2><p className="text-[#888] tracking-widest text-sm">重要資訊 • 航班 • 住宿 • 穿搭</p></div>
-      <section><SectionTitle icon={<Plane size={20} />} title="航班資訊 Flights" /><div className="grid md:grid-cols-2 gap-8 mt-6">{data.flights.map((flight) => (<div key={flight.id} className="bg-white p-6 rounded shadow-sm border border-[#E6E4DD] group"><div className="mb-4 aspect-video bg-[#F0F0F0] overflow-hidden rounded relative"><img src={flight.image} alt="Flight" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /></div><h3 className="font-bold text-[#444] mb-2">{flight.title}</h3><div className="space-y-1 text-sm text-[#666]"><p className="flex items-center"><Calendar size={14} className="mr-2"/> {flight.date}</p><p className="flex items-center"><Clock size={14} className="mr-2"/> {flight.time} ({flight.duration})</p></div></div>))}</div></section>
-      <section><SectionTitle icon={<Bed size={20} />} title="住宿 Accommodation" /><div className="space-y-6 mt-6">{data.hotels.map((hotel, idx) => (<div key={idx} className="bg-white p-6 md:p-8 rounded shadow-sm border border-[#E6E4DD] flex flex-col md:flex-row justify-between gap-6"><div className="flex-1"><div className="flex items-baseline space-x-3 mb-1"><h3 className="text-xl serif-font text-text">{hotel.name}</h3><span className="text-xs bg-[#F5F4F0] px-2 py-0.5 rounded text-[#888]">{hotel.nights}晚</span></div><p className="text-sm text-[#999] mb-4">{hotel.engName}</p><div className="space-y-2 text-sm text-[#666]"><p><strong>Check-in:</strong> {hotel.checkIn}</p><p><strong>Check-out:</strong> {hotel.checkOut}</p><p className="text-[#888] text-xs mt-2">{hotel.address}</p></div></div><div className="flex flex-col justify-end"><a href={hotel.link} target="_blank" rel="noreferrer" className="flex items-center justify-center space-x-2 px-6 py-3 bg-wine text-white text-xs tracking-widest hover:bg-coffee transition-colors rounded-sm"><span>VIEW MAP</span> <ExternalLink size={14} /></a></div></div>))}</div></section>
-      <section><SectionTitle icon={<Car size={20} />} title="租車資訊 Car Rental" /><div className="bg-[#FAF9F6] p-8 rounded border border-[#E6E4DD] mt-6 relative overflow-hidden"><div className="absolute top-0 right-0 p-4 opacity-10"><Car size={120} /></div><div className="relative z-10 space-y-4"><div><p className="text-xs text-[#888] tracking-widest uppercase">Order ID</p><p className="text-2xl serif-font tracking-wide">{data.carRental.orderId}</p></div><div className="grid md:grid-cols-2 gap-6 pt-4"><div><p className="font-bold text-[#444] mb-1">租借期間</p><p className="text-sm text-[#666]">{data.carRental.period}</p></div><div><p className="font-bold text-[#444] mb-1">地點 ({data.carRental.transport})</p><p className="text-sm text-[#666]">{data.carRental.location}</p><a href={data.carRental.link} target="_blank" rel="noreferrer" className="text-xs text-coffee underline mt-2 inline-block">在地圖上開啟</a></div></div></div></div></section>
-      <section className="grid md:grid-cols-2 gap-12"><div><SectionTitle icon={<Shirt size={20} />} title="穿搭建議 Weather & Wear" /><div className="mt-6 space-y-6"><WeatherWidget /><div className="space-y-3">{data.clothing.layers.map((l, i) => (<div key={i} className="flex items-center text-sm border-b border-[#EEE] pb-2 last:border-0"><span className="w-16 font-bold text-[#AA9988] text-xs uppercase">{l.part}</span><div className="flex-1"><span className="text-[#444]">{l.item}</span><p className="text-[10px] text-[#999]">{l.note}</p></div></div>))}</div></div></div><div><SectionTitle icon={<ShoppingBag size={20} />} title="必帶物品 Checklist" /><div className="mt-6 grid grid-cols-2 gap-3">{data.packing.map((item, i) => (<div key={i} className="flex items-center space-x-2 text-sm text-[#555]"><div className="w-4 h-4 rounded border border-[#CCC]" /><span>{item}</span></div>))}</div></div></section>
+      <section><SectionTitle icon={<Plane size={20} />} title="航班資訊 Flights" /><div className="grid md:grid-cols-2 gap-8 mt-6">{data.flights.map((flight) => (<div key={flight.id} className="bg-white/90 p-6 rounded shadow-sm border border-[#E6E4DD] group"><div className="mb-4 aspect-video bg-[#F0F0F0] overflow-hidden rounded relative"><img src={flight.image} alt="Flight" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /></div><h3 className="font-bold text-[#444] mb-2">{flight.title}</h3><div className="space-y-1 text-sm text-[#666]"><p className="flex items-center"><Calendar size={14} className="mr-2"/> {flight.date}</p><p className="flex items-center"><Clock size={14} className="mr-2"/> {flight.time} ({flight.duration})</p></div></div>))}</div></section>
+      <section><SectionTitle icon={<Bed size={20} />} title="住宿 Accommodation" /><div className="space-y-6 mt-6">{data.hotels.map((hotel, idx) => (<div key={idx} className="bg-white/90 p-6 md:p-8 rounded shadow-sm border border-[#E6E4DD] flex flex-col md:flex-row justify-between gap-6"><div className="flex-1"><div className="flex items-baseline space-x-3 mb-1"><h3 className="text-xl serif-font text-text">{hotel.name}</h3><span className="text-xs bg-[#F5F4F0] px-2 py-0.5 rounded text-[#888]">{hotel.nights}晚</span></div><p className="text-sm text-[#999] mb-4">{hotel.engName}</p><div className="space-y-2 text-sm text-[#666]"><p><strong>Check-in:</strong> {hotel.checkIn}</p><p><strong>Check-out:</strong> {hotel.checkOut}</p><p className="text-[#888] text-xs mt-2">{hotel.address}</p></div></div><div className="flex flex-col justify-end"><a href={hotel.link} target="_blank" rel="noreferrer" className="flex items-center justify-center space-x-2 px-6 py-3 bg-wine text-white text-xs tracking-widest hover:bg-coffee transition-colors rounded-sm"><span>VIEW MAP</span> <ExternalLink size={14} /></a></div></div>))}</div></section>
+      <section><SectionTitle icon={<Car size={20} />} title="租車資訊 Car Rental" /><div className="bg-[#FAF9F6] p-8 rounded border border-[#E6E4DD] mt-6 relative overflow-hidden"><div className="absolute top-0 right-0 p-4 opacity-10"><Car size={120} /></div><div className="relative z-10 space-y-4"><div><p className="text-xs text-[#888] tracking-widest uppercase">Order ID</p><p className="text-2xl serif-font tracking-wide text-text">{data.carRental.orderId}</p></div><div className="grid md:grid-cols-2 gap-6 pt-4"><div><p className="font-bold text-[#444] mb-1">租借期間</p><p className="text-sm text-[#666]">{data.carRental.period}</p></div><div><p className="font-bold text-[#444] mb-1">地點 ({data.carRental.transport})</p><p className="text-sm text-[#666]">{data.carRental.location}</p><a href={data.carRental.link} target="_blank" rel="noreferrer" className="text-xs text-coffee underline mt-2 inline-block">在地圖上開啟</a></div></div></div></div></section>
+      <section className="grid md:grid-cols-2 gap-12"><div><SectionTitle icon={<Shirt size={20} />} title="穿搭建議 Weather & Wear" /><div className="mt-6 space-y-6"><WeatherWidget /><div className="space-y-3">{data.clothing.layers.map((l, i) => (<div key={i} className="flex items-center text-sm border-b border-[#EEE] pb-2 last:border-0"><span className="w-16 font-bold text-[#AA9988] text-xs uppercase">{l.part}</span><div className="flex-1"><span className="text-text">{l.item}</span><p className="text-[10px] text-[#999]">{l.note}</p></div></div>))}</div></div></div><div><SectionTitle icon={<ShoppingBag size={20} />} title="必帶物品 Checklist" /><div className="mt-6 grid grid-cols-2 gap-3">{data.packing.map((item, i) => (<div key={i} className="flex items-center space-x-2 text-sm text-[#555]"><div className="w-4 h-4 rounded border border-[#CCC]" /><span>{item}</span></div>))}</div></div></section>
     </motion.div>
   );
 }
@@ -279,13 +324,13 @@ function InfoView({ data }) {
 function HikingView({ data }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto px-6 py-12">
-      <div className="relative rounded-xl overflow-hidden mb-12 h-64 md:h-80 shadow-lg"><img src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2076&auto=format&fit=crop" alt="Hallasan" className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/40 flex items-center justify-center flex-col text-white"><h1 className="text-4xl serif-font mb-2">Hallasan Hiking</h1><p className="tracking-widest text-sm opacity-90">漢拏山 • 雪地健行攻略</p></div></div>
+      <div className="relative rounded-xl overflow-hidden mb-12 h-64 md:h-80 shadow-lg"><img src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2076&auto=format&fit=crop" alt="Hallasan" className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/40 flex items-center justify-center flex-col text-white"><h1 className="text-4xl serif-font mb-2 text-white">Hallasan Hiking</h1><p className="tracking-widest text-sm opacity-90 text-white">漢拏山 • 雪地健行攻略</p></div></div>
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-12">
-          <section><h3 className="text-xl serif-font text-text mb-4 flex items-center"><MapPin className="mr-2" size={18} /> 路線資訊</h3><div className="bg-white p-6 rounded border border-[#E6E4DD] space-y-4"><div className="flex justify-between items-start border-b border-[#F0F0F0] pb-4"><div><h4 className="font-bold text-lg text-text">{data.route.name}</h4><p className="text-sm text-[#666] mt-1">{data.route.desc}</p></div><div className="text-right"><span className="block text-2xl font-light text-wine">{data.route.distance}</span><span className="text-xs text-[#888]">總距離</span></div></div><div className="grid grid-cols-2 gap-4 text-sm"><div><span className="block text-[#888] text-xs mb-1">預計耗時</span><span className="font-medium text-[#444]">{data.route.duration}</span></div><div><span className="block text-[#888] text-xs mb-1">預計氣溫</span><span className="font-medium text-[#444]">{data.route.temp}</span></div></div></div></section>
-          <section><h3 className="text-xl serif-font text-text mb-4 flex items-center"><AlertCircle className="mr-2" size={18} /> 裝備指南</h3><div className="space-y-4">{data.gear.map((g, i) => (<div key={i} className="flex bg-[#FAF9F6] p-4 rounded border border-[#E6E4DD]"><div className="w-24 flex-shrink-0 font-bold text-[#888] text-sm uppercase">{g.item}</div><div className="text-sm text-[#444] leading-relaxed">{g.desc}</div></div>))}</div></section>
+          <section><h3 className="text-xl serif-font text-text mb-4 flex items-center"><MapPin className="mr-2" size={18} /> 路線資訊</h3><div className="bg-white/90 p-6 rounded border border-[#E6E4DD] space-y-4"><div className="flex justify-between items-start border-b border-[#F0F0F0] pb-4"><div><h4 className="font-bold text-lg text-text">{data.route.name}</h4><p className="text-sm text-[#666] mt-1">{data.route.desc}</p></div><div className="text-right"><span className="block text-2xl font-light text-wine">{data.route.distance}</span><span className="text-xs text-[#888]">總距離</span></div></div><div className="grid grid-cols-2 gap-4 text-sm"><div><span className="block text-[#888] text-xs mb-1">預計耗時</span><span className="font-medium text-[#444]">{data.route.duration}</span></div><div><span className="block text-[#888] text-xs mb-1">預計氣溫</span><span className="font-medium text-[#444]">{data.route.temp}</span></div></div></div></section>
+          <section><h3 className="text-xl serif-font text-text mb-4 flex items-center"><AlertCircle className="mr-2" size={18} /> 裝備指南</h3><div className="space-y-4">{data.gear.map((g, i) => (<div key={i} className="flex bg-[#FAF9F6] p-4 rounded border border-[#E6E4DD]"><div className="w-24 flex-shrink-0 font-bold text-[#888] text-sm uppercase">{g.item}</div><div className="text-sm text-text leading-relaxed">{g.desc}</div></div>))}</div></section>
         </div>
-        <div className="space-y-8"><div className="bg-text text-[#F5F4F0] p-6 rounded shadow-lg"><h4 className="text-lg serif-font mb-4 border-b border-gray-600 pb-2">裝備租借</h4><p className="font-bold text-xl mb-1">{data.rental.shop}</p><a href={data.rental.link} target="_blank" rel="noreferrer" className="text-xs text-[#AAA] hover:text-white underline mb-6 block">開啟地圖連結</a><div className="space-y-4 text-sm"><div><span className="block text-[#888] text-xs mb-1">借用時間</span><p>{data.rental.time}</p></div><div className="p-3 bg-white/10 rounded text-xs text-[#CCC]">⚠️ {data.rental.note}</div></div></div></div>
+        <div className="space-y-8"><div className="bg-text text-[#F5F4F0] p-6 rounded shadow-lg"><h4 className="text-lg serif-font mb-4 border-b border-gray-600 pb-2">裝備租借</h4><p className="font-bold text-xl mb-1 text-white">{data.rental.shop}</p><a href={data.rental.link} target="_blank" rel="noreferrer" className="text-xs text-[#AAA] hover:text-white underline mb-6 block">開啟地圖連結</a><div className="space-y-4 text-sm"><div><span className="block text-[#888] text-xs mb-1">借用時間</span><p className="text-white/90">{data.rental.time}</p></div><div className="p-3 bg-white/10 rounded text-xs text-[#CCC]">⚠️ {data.rental.note}</div></div></div></div>
       </div>
     </motion.div>
   );
@@ -295,12 +340,12 @@ function ScheduleView({ schedule, activeDay, onDayChange, onItemClick }) {
   const dayData = schedule[activeDay];
   return (
     <div className="min-h-screen pb-20">
-      <div className="sticky top-16 z-30 bg-bg/95 backdrop-blur border-b border-[#E6E4DD] overflow-x-auto scrollbar-hide"><div className="flex justify-start md:justify-center min-w-max px-4">{Object.values(schedule).map((day) => (<button key={day.id} onClick={() => onDayChange(day.id)} className={`px-6 py-4 text-sm tracking-widest transition-colors border-b-2 ${activeDay === day.id ? 'border-wine text-wine font-bold' : 'border-transparent text-[#999] hover:text-[#666]'}`}>{day.id.toUpperCase().replace('DAY', 'DAY ')}</button>))}</div></div>
-      <motion.div key={activeDay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="relative h-[40vh] md:h-[50vh] w-full"><div className="absolute inset-0 bg-black/20" /><img src={dayData.banner} alt="Banner" className="w-full h-full object-cover" /><div className="absolute bottom-0 left-0 p-8 md:p-12 text-white bg-gradient-to-t from-black/60 to-transparent w-full"><p className="tracking-[0.2em] text-sm mb-2 opacity-80">{dayData.date} • {dayData.id.toUpperCase()}</p><h2 className="text-3xl md:text-5xl serif-font font-light">{dayData.title}</h2></div></motion.div>
+      <div className="sticky top-16 z-30 bg-bg/95 backdrop-blur border-b border-[#E6E4DD] overflow-x-auto scrollbar-hide"><div className="flex justify-start md:justify-center min-w-max px-4">{Object.values(schedule).map((day) => (<button key={day.id} onClick={() => onDayChange(day.id)} className={`px-6 py-4 text-sm tracking-widest transition-colors border-b-2 ${activeDay === day.id ? 'border-wine text-wine font-bold' : 'border-transparent text-[#999] hover:text-text'}`}>{day.id.toUpperCase().replace('DAY', 'DAY ')}</button>))}</div></div>
+      <motion.div key={activeDay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="relative h-[40vh] md:h-[50vh] w-full"><div className="absolute inset-0 bg-black/40" /><img src={dayData.banner} alt="Banner" className="w-full h-full object-cover" /><div className="absolute bottom-0 left-0 p-8 md:p-12 text-white bg-gradient-to-t from-black/80 to-transparent w-full"><p className="tracking-[0.2em] text-sm mb-2 opacity-90 text-white">{dayData.date} • {dayData.id.toUpperCase()}</p><h2 className="text-3xl md:text-5xl serif-font font-light text-white">{dayData.title}</h2></div></motion.div>
       <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-8 relative z-10 space-y-12">
-        <div className="bg-white rounded shadow-xl shadow-[#00000005] border border-[#EBE9E4] overflow-hidden">
+        <div className="bg-white/95 rounded shadow-xl shadow-[#00000005] border border-[#EBE9E4] overflow-hidden">
           <div className="p-6 border-b border-[#F0F0F0] bg-white/50 sticky top-0 flex justify-between items-center"><h3 className="text-xs font-bold tracking-[0.2em] text-[#888] uppercase flex items-center"><MapPin size={14} className="mr-2"/> Main Route</h3><span className="text-[10px] text-[#AAA]">點擊項目查看詳情</span></div>
-          <div className="divide-y divide-[#F0F0F0]">{dayData.route.map((item, idx) => (<div key={idx} onClick={() => onItemClick(item)} className="p-6 hover:bg-[#FAF9F6] transition-colors flex gap-6 cursor-pointer group"><div className="w-16 flex-shrink-0 text-right font-medium text-text serif-font pt-1">{item.time}</div><div className="flex-1 border-l-2 border-[#F0F0F0] pl-6 relative"><div className="absolute -left-[7px] top-2 w-3 h-3 rounded-full bg-[#E6E4DD] border-2 border-white group-hover:bg-wine transition-colors" /><h4 className="text-lg font-medium text-[#333] group-hover:text-text">{item.place}</h4><p className="text-xs font-bold text-[#AA9988] tracking-wider uppercase mb-1">{item.title}</p><p className="text-sm text-[#666] font-light mb-2 line-clamp-1">{item.desc || item.note}</p><div className="flex items-center text-xs text-coffee opacity-0 group-hover:opacity-100 transition-opacity">查看更多 <ChevronRight size={12} className="ml-1"/></div></div></div>))}</div>
+          <div className="divide-y divide-[#F0F0F0]">{dayData.route.map((item, idx) => (<div key={idx} onClick={() => onItemClick(item)} className="p-6 hover:bg-[#FAF9F6] transition-colors flex gap-6 cursor-pointer group"><div className="w-16 flex-shrink-0 text-right font-medium text-text serif-font pt-1">{item.time}</div><div className="flex-1 border-l-2 border-[#F0F0F0] pl-6 relative"><div className="absolute -left-[7px] top-2 w-3 h-3 rounded-full bg-[#E6E4DD] border-2 border-white group-hover:bg-wine transition-colors" /><h4 className="text-lg font-medium text-text group-hover:text-wine">{item.place}</h4><p className="text-xs font-bold text-[#AA9988] tracking-wider uppercase mb-1">{item.title}</p><p className="text-sm text-[#666] font-light mb-2 line-clamp-1">{item.desc || item.note}</p><div className="flex items-center text-xs text-coffee opacity-0 group-hover:opacity-100 transition-opacity">查看更多 <ChevronRight size={12} className="ml-1"/></div></div></div>))}</div>
         </div>
         <HorizontalSection title="Nearby Food 美食" icon={<Utensils size={16}/>} items={dayData.food} onItemClick={onItemClick} />
         <HorizontalSection title="Coffee & Dessert 咖啡甜點" icon={<Coffee size={16}/>} items={dayData.cafe} onItemClick={onItemClick} />
@@ -317,9 +362,9 @@ function HorizontalSection({ title, icon, items, onItemClick }) {
       <h3 className="flex items-center text-sm font-bold tracking-[0.2em] text-[#444] uppercase mb-4 px-2"><span className="mr-2 text-[#888]">{icon}</span> {title}</h3>
       <div className="flex overflow-x-auto space-x-4 pb-6 px-2 scrollbar-hide snap-x">
         {items.map((item, idx) => (
-          <div key={idx} onClick={() => onItemClick(item)} className="flex-shrink-0 w-64 bg-white border border-[#E6E4DD] p-5 rounded snap-center hover:shadow-md transition-shadow cursor-pointer group">
+          <div key={idx} onClick={() => onItemClick(item)} className="flex-shrink-0 w-64 bg-white/95 border border-[#E6E4DD] p-5 rounded snap-center hover:shadow-md transition-shadow cursor-pointer group">
             <div className="h-32 mb-4 overflow-hidden rounded bg-[#F5F5F5]"><img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/></div>
-            <h4 className="font-bold text-[#333] mb-1">{item.name}</h4>
+            <h4 className="font-bold text-text mb-1">{item.name}</h4>
             <p className="text-sm text-[#666] mb-4 h-10 overflow-hidden line-clamp-2">{item.desc}</p>
             <span className="text-xs text-[#2C2C2C] border border-[#DDD] px-3 py-1.5 rounded group-hover:bg-wine group-hover:text-white group-hover:border-wine transition-colors block text-center">READ MORE</span>
           </div>
