@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F5F4F0" />
+    <meta name="description" content="Jeju Trip 2025" />
+    <title>Jeju Trip 2025</title>
+    
+    <!-- 強制載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              wine: '#86473F',
+              coffee: '#B35C37',
+              bg: '#F5F4F0',
+              text: '#333333'
+            },
+            fontFamily: {
+              sans: ['Zen Maru Gothic', 'sans-serif'],
+              serif: ['Noto Serif TC', 'serif'],
+            }
+          }
+        }
+      }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
