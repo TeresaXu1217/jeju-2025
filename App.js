@@ -7,7 +7,7 @@ import {
   ThermometerSun, Edit3, Save, Info, CheckCircle
 } from 'lucide-react';
 
-// --- 防呆機制：強制載入樣式表 (確保不會變純文字) ---
+// --- 防呆機制：強制載入樣式表 ---
 const useTailwindCDN = () => {
   useEffect(() => {
     if (!document.querySelector('script[src*="tailwindcss"]')) {
@@ -262,6 +262,7 @@ function DetailModal({ isOpen, onClose, data }) {
 
   useEffect(() => {
     if (data) {
+      // 確保使用唯一的 ID 作為 Key，避免衝突
       const key = `jeju-note-${data.id || data.place}`;
       setNote(localStorage.getItem(key) || '');
       setSaved(false);
@@ -274,6 +275,7 @@ function DetailModal({ isOpen, onClose, data }) {
     const key = `jeju-note-${data.id || data.place}`;
     localStorage.setItem(key, val);
     setSaved(true);
+    // 1秒後隱藏儲存提示
     setTimeout(() => setSaved(false), 2000);
   };
 
