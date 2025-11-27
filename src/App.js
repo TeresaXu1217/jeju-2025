@@ -85,7 +85,7 @@ const HIKING_DATA = {
 const SCHEDULE_DATA = {
   day1: {
     id: 'day1', date: '12/04', title: '抵達 + Aewol 西岸放鬆',
-    banner: 'https://images.unsplash.com/photo-1548115184-bc6544d06a58?q=80&w=2070&auto=format&fit=crop',
+    banner: 'https://images.unsplash.com/photo-sea,
     route: [
       { time: '06:05', title: '抵達', place: '濟州國際機場', note: '出關領行李，準備開始旅程', link: 'https://map.naver.com/p/search/제주국제공항', desc: '抵達後請先連上機場 Wi-Fi。出關後跟隨指示牌前往租車接駁區 (Rent-a-car Shuttle)。', tips: ['機場便利商店可先買水或 T-money 卡', '廁所建議先上'], image: 'https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?q=80&w=2000&auto=format&fit=crop' },
       { time: '07:00', title: '租車', place: 'LOTTE Rent-a-Car', note: '搭乘接駁車前往 Auto House', link: 'https://map.naver.com/p/search/롯데렌터카제주오토하우스', desc: '濟州島最大的租車公司之一。抵達後請抽取號碼牌，準備好護照、台灣駕照、國際駕照與信用卡。', tips: ['請務必檢查車輛外觀並錄影', '確認燃油種類 (汽油/柴油/LPG)'], image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop' },
