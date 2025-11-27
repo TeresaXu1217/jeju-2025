@@ -7,14 +7,43 @@ import {
   ThermometerSun, Edit3, Save, Info, CheckCircle
 } from 'lucide-react';
 
-// --- 背景紋理 (降低透明度，避免干擾文字) ---
+// --- 防呆機制：強制載入樣式表 (確保不會變純文字) ---
+const useTailwindCDN = () => {
+  useEffect(() => {
+    if (!document.querySelector('script[src*="tailwindcss"]')) {
+      const script = document.createElement('script');
+      script.src = "https://cdn.tailwindcss.com";
+      script.onload = () => {
+        window.tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                wine: '#86473F',
+                coffee: '#B35C37',
+                bg: '#F5F4F0',
+                text: '#333333'
+              },
+              fontFamily: {
+                sans: ['Zen Maru Gothic', 'sans-serif'],
+                serif: ['Noto Serif TC', 'serif'],
+              }
+            }
+          }
+        };
+      };
+      document.head.appendChild(script);
+    }
+  }, []);
+};
+
+// --- 背景紋理 ---
 const JapaneseTexture = () => (
-  <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02] mix-blend-multiply" 
+  <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03] mix-blend-multiply" 
        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
   </div>
 );
 
-// --- 行程資料 ---
+// --- 資料設定區 (DATA) ---
 const INFO_DATA = {
   flights: [
     { id: 'outbound', title: '去程：台北 (TPE) - 濟州 (CJU)', date: '12月4日 (週四)', time: '02:50 - 06:05', duration: '2小時 15分', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop' },
@@ -120,7 +149,7 @@ const SCHEDULE_DATA = {
   },
   day4: {
     id: 'day4', date: '12/07', title: 'Day 4: 漢拏山健行', banner: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2070&auto=format&fit=crop',
-    route: [
+    items: [
       { time: '07:00', title: '移動', place: '前往御里牧', note: 'Eorimok Trailhead', link: 'https://map.naver.com/p/search/어리목탐방로', desc: '建議早起出發，避免登山口停車場客滿。若搭公車請確認 240 號公車時刻表。', tips: ['車程約 30-40 分鐘', '早餐要吃飽'], image: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?q=80&w=2000&auto=format&fit=crop' },
       { time: '07:30', title: '登山', place: '開始爬山', note: '御里牧路線上山', link: '', desc: '剛開始是一段森林路，之後視野會開闊。務必在入口處穿好冰爪。', tips: ['注意保暖', '適時補充水分'], image: 'https://images.unsplash.com/photo-1516655855035-d5215bcb5604?q=80&w=2000&auto=format&fit=crop' },
       { time: '全天', title: '健行', place: '御里牧 - 靈室', note: '享受雪景與挑戰', link: '', desc: '抵達威瑟岳避難所後，可以休息吃泡麵（需自備熱水）。下山走靈室路線，風景如畫。', tips: ['避難所有廁所', '垃圾請自行帶下山'], image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2000&auto=format&fit=crop' },
@@ -149,6 +178,8 @@ const SCHEDULE_DATA = {
 };
 
 export default function App() {
+  useTailwindCDN(); // 自動載入樣式
+
   const [activeCategory, setActiveCategory] = useState('home');
   const [activeDay, setActiveDay] = useState('day1');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -224,13 +255,13 @@ function WeatherWidget() {
   );
 }
 
+// 核心修改：背景改為 bg-white (原本是 bg-bg)
 function DetailModal({ isOpen, onClose, data }) {
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (data) {
-      // 確保使用唯一的 ID 作為 Key，避免衝突
       const key = `jeju-note-${data.id || data.place}`;
       setNote(localStorage.getItem(key) || '');
       setSaved(false);
@@ -243,7 +274,6 @@ function DetailModal({ isOpen, onClose, data }) {
     const key = `jeju-note-${data.id || data.place}`;
     localStorage.setItem(key, val);
     setSaved(true);
-    // 1秒後隱藏儲存提示
     setTimeout(() => setSaved(false), 2000);
   };
 
