@@ -5,7 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>濟州島旅程規劃 JEJU 2025</title>
     
-    <!-- 1. Import Map: 新增了 firebase/auth 和 firebase/storage -->
+    <!-- 1. 錯誤偵測 (白畫面救星) -->
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            const errorBox = document.getElementById('error-box');
+            if (errorBox) {
+                errorBox.style.display = 'block';
+                errorBox.innerHTML += `<p><strong>Error:</strong> ${msg}<br><small>${url}:${line}</small></p>`;
+            }
+            console.error("Global Error:", msg, error);
+            return false;
+        };
+    </script>
+
+    <!-- 2. Import Map: 使用 esm.sh 統一來源，提高穩定度 -->
     <script type="importmap">
     {
       "imports": {
@@ -13,15 +26,14 @@
         "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
         "framer-motion": "https://esm.sh/framer-motion@10.16.4",
         "lucide-react": "https://esm.sh/lucide-react@0.292.0",
-        "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
-        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js",
-        "firebase/storage": "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js",
-        "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"
+        "firebase/app": "https://esm.sh/firebase@10.7.1/app",
+        "firebase/firestore": "https://esm.sh/firebase@10.7.1/firestore",
+        "firebase/auth": "https://esm.sh/firebase@10.7.1/auth"
       }
     }
     </script>
 
-    <!-- 2. Tailwind CSS -->
+    <!-- 3. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -50,10 +62,10 @@
         }
     </script>
 
-    <!-- 3. Babel -->
+    <!-- 4. Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 4. Fonts -->
+    <!-- 5. Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;500;700&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
@@ -65,26 +77,42 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         #root { transition: opacity 0.5s ease; opacity: 1; }
         
-        /* Loading Spinner */
+        /* 錯誤訊息框 */
+        #error-box {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: #ffe4e6;
+            color: #be123c;
+            padding: 20px;
+            z-index: 9999;
+            border-bottom: 2px solid #9f1239;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        /* Spinner */
         .spinner {
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(0,0,0,0.1);
             border-radius: 50%;
-            border-top: 3px solid #fff;
-            width: 24px;
-            height: 24px;
-            -webkit-animation: spin 1s linear infinite; /* Safari */
+            border-top: 2px solid #333;
+            width: 16px;
+            height: 16px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <!-- 錯誤顯示區 -->
+    <div id="error-box">
+        <h3 class="font-bold text-lg mb-2">⚠️ 網站發生錯誤 (Debug Mode)</h3>
+        <p>如果看到此畫面，請截圖給開發者。</p>
+    </div>
+
     <div id="root"></div>
 
-    <!-- 5. React App -->
+    <!-- 6. React App -->
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
@@ -94,13 +122,12 @@
             Wind, Coffee, Mountain, ShoppingBag, Calendar,
             Plane, Bed, Car, Shirt, Snowflake, Utensils, AlertCircle,
             ThermometerSun, Edit3, Save, CloudSun, Search,
-            Lock, Unlock, Camera, Upload
+            Lock, Unlock, Camera, Image as ImageIcon
         } from 'lucide-react';
 
-        // --- Firebase ---
+        // --- Firebase (Safe Import) ---
         import { initializeApp } from "firebase/app";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "firebase/firestore";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
         import { getAuth, signInAnonymously } from "firebase/auth";
 
         // TODO: 請填入您的 Firebase Config
@@ -113,20 +140,25 @@
             appId: "YOUR_APP_ID"
         };
 
-        let db, storage, auth;
-        // 初始化檢查
-        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        let db, auth;
+        let isFirebaseReady = false;
+
+        // 初始化 Firebase (加入容錯機制)
+        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                storage = getStorage(app);
                 auth = getAuth(app);
-                // 匿名登入以確保有權限存取
-                signInAnonymously(auth).catch(console.error);
-                console.log("Firebase services initialized");
+                signInAnonymously(auth).then(() => {
+                    console.log("Firebase Auth Success");
+                }).catch(e => console.warn("Auth Error (Check Rules):", e));
+                isFirebaseReady = true;
+                console.log("Firebase initialized");
             } catch (error) {
-                console.error("Firebase init error:", error);
+                console.error("Firebase Init Failed:", error);
             }
+        } else {
+            console.warn("Firebase Config 未設定，將使用本機模式 (Local Mode)");
         }
 
         // --- 日系背景 ---
@@ -136,12 +168,22 @@
             </div>
         );
 
-        // --- 可編輯圖片組件 (Editable Image Component) ---
+        // --- 圖片處理工具 (Base64) ---
+        const convertToBase64 = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        // --- 可編輯圖片組件 (改良版：不依賴 Firebase Storage) ---
         const EditableImage = ({ id, src, alt, className, isEditing, customImages }) => {
             const [uploading, setUploading] = useState(false);
             const fileInputRef = useRef(null);
 
-            // 優先顯示自訂圖片，若無則顯示預設圖片
+            // 優先顯示：1. 剛上傳的預覽(如果有) 2. 雲端/Local同步的圖 3. 預設圖
             const displaySrc = customImages && customImages[id] ? customImages[id] : src;
 
             const handleClick = () => {
@@ -152,25 +194,42 @@
 
             const handleFileChange = async (e) => {
                 const file = e.target.files[0];
-                if (!file || !storage || !db) return;
+                if (!file) return;
+
+                // 檢查檔案大小 (限制 800KB 以內，避免 Firestore/LocalStorage 爆炸)
+                if (file.size > 800 * 1024) {
+                    alert("⚠️ 圖片太大了！請選擇小於 800KB 的圖片，或先壓縮後再上傳。\n(我們已停用 Storage，改用資料庫存圖，所以有容量限制)");
+                    return;
+                }
 
                 setUploading(true);
                 try {
-                    // 1. 上傳到 Storage
-                    const storageRef = ref(storage, `site_images/${id}_${Date.now()}`);
-                    await uploadBytes(storageRef, file);
-                    const url = await getDownloadURL(storageRef);
+                    // 1. 轉成 Base64 字串
+                    const base64Str = await convertToBase64(file);
 
-                    // 2. 更新 Firestore 對應表
-                    // 我們將所有圖片對應存在一個 'config/images' 文件中
-                    await setDoc(doc(db, 'config', 'images'), {
-                        [id]: url
-                    }, { merge: true });
+                    // 2. 存入 LocalStorage (立即預覽)
+                    const currentLocal = JSON.parse(localStorage.getItem('jeju_images') || '{}');
+                    currentLocal[id] = base64Str;
+                    localStorage.setItem('jeju_images', JSON.stringify(currentLocal));
 
-                    alert('圖片更新成功！');
+                    // 3. 觸發畫面更新 (透過 window event 或直接 reload，這裡依賴上層 state 更新)
+                    // 為了簡單，我們透過 Firebase 同步觸發，或手動重新整理
+                    
+                    // 4. 存入 Firestore (如果已連線)
+                    if (db) {
+                        await setDoc(doc(db, 'config', 'images'), {
+                            [id]: base64Str
+                        }, { merge: true });
+                        alert('✅ 圖片已更新 (同步至雲端)');
+                    } else {
+                        alert('✅ 圖片已更新 (僅本機暫存)');
+                        // 沒連線時，手動強制重整頁面來看到效果 (簡單暴力)
+                        window.location.reload(); 
+                    }
+
                 } catch (error) {
-                    console.error("Upload failed:", error);
-                    alert('上傳失敗，請檢查 Firebase Storage 權限與設定。');
+                    console.error("Image processing failed:", error);
+                    alert('圖片處理失敗');
                 } finally {
                     setUploading(false);
                 }
@@ -181,14 +240,14 @@
                     <img 
                         src={displaySrc} 
                         alt={alt} 
-                        className={`w-full h-full object-cover transition-all duration-500 ${isEditing ? 'brightness-50' : ''}`} 
+                        className={`w-full h-full object-cover transition-all duration-500 ${isEditing ? 'brightness-50 blur-[2px]' : ''}`} 
                     />
                     
                     {/* 編輯模式遮罩 */}
                     {isEditing && (
                         <div 
                             onClick={handleClick}
-                            className="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-black/20 transition-colors z-20"
+                            className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-black/10 transition-colors z-20"
                         >
                             <input 
                                 type="file" 
@@ -197,14 +256,15 @@
                                 className="hidden" 
                                 accept="image/*"
                             />
-                            <div className="bg-white/90 text-black px-4 py-2 rounded-full flex items-center shadow-lg hover:scale-105 transition-transform">
+                            <div className="bg-white/90 text-black px-4 py-3 rounded-xl flex items-center shadow-2xl hover:scale-105 transition-transform border border-gray-200">
                                 {uploading ? (
-                                    <div className="spinner mr-2 border-gray-400 border-t-black"></div>
+                                    <div className="spinner mr-2"></div>
                                 ) : (
-                                    <Camera size={20} className="mr-2" />
+                                    <Camera size={20} className="mr-2 text-blue-600" />
                                 )}
-                                <span className="text-sm font-bold">{uploading ? '上傳中...' : '更換圖片'}</span>
+                                <span className="text-sm font-bold tracking-widest">{uploading ? '處理中...' : '更換圖片'}</span>
                             </div>
+                            <p className="text-white text-[10px] mt-2 opacity-80 font-light tracking-wider">MAX 800KB</p>
                         </div>
                     )}
                 </div>
@@ -537,12 +597,16 @@
             const [isEditing, setIsEditing] = useState(false);
             const [customImages, setCustomImages] = useState({});
 
-            // 監聽 Firestore 圖片變更
+            // 初始化載入 LocalStorage 的圖片，避免重新整理後消失 (如果沒有連線)
             useEffect(() => {
+                const localImages = JSON.parse(localStorage.getItem('jeju_images') || '{}');
+                setCustomImages(prev => ({ ...prev, ...localImages }));
+
                 if (db) {
+                    // 如果有連線，監聽雲端更新 (會覆蓋 Local)
                     const unsub = onSnapshot(doc(db, 'config', 'images'), (docSnap) => {
                         if (docSnap.exists()) {
-                            setCustomImages(docSnap.data());
+                            setCustomImages(prev => ({ ...prev, ...docSnap.data() }));
                         }
                     });
                     return () => unsub();
