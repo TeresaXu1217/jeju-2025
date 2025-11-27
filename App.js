@@ -7,12 +7,14 @@ import {
   ThermometerSun, Edit3, Save, Info
 } from 'lucide-react';
 
+// --- 背景紋理 ---
 const JapaneseTexture = () => (
   <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.03] mix-blend-multiply" 
        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
   </div>
 );
 
+// --- 行程資料 ---
 const INFO_DATA = {
   flights: [
     { id: 'outbound', title: '去程：台北 (TPE) - 濟州 (CJU)', date: '12月4日 (週四)', time: '02:50 - 06:05', duration: '2小時 15分', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop' },
@@ -97,63 +99,29 @@ const SCHEDULE_DATA = {
     ]
   },
   day3: {
-    id: 'day3', date: '12/06', title: '牛島 + 城山日出峰',
-    banner: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2070&auto=format&fit=crop',
-    route: [
-      { time: '08:00', title: '出發', place: '城山港', note: '前往牛島的碼頭', link: 'https://map.naver.com/p/search/성산포항종합여객터미널', desc: '請在此填寫乘船申報單 (一式兩份，來回各一張)，並連同護照、現金購買船票。', tips: ['一定要帶護照！', '確認末班船時間'], image: 'https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?q=80&w=2000&auto=format&fit=crop' },
-      { time: '10:20', title: '環島', place: '牛島 Udo', note: '租電動車/腳踏車', link: 'https://map.naver.com/p/search/우도', desc: '濟州的離島，海水清澈見底。租一台可愛的電動車環島是最好的方式。', tips: ['租車需出示國際駕照', '推薦西濱白沙、下古水洞海灘'], image: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2000&auto=format&fit=crop' },
-      { time: '16:00', title: '景點', place: '城山日出峰', note: '世界自然遺產', link: 'https://map.naver.com/p/search/성산일출봉', desc: '巨大的火山噴發口。如果不爬到頂，旁邊的免費步道也能拍到很美的側面與海景。', tips: ['登頂約需 20-30 分鐘 (階梯多)', '每月第一個週一公休 (請確認)'], image: 'https://images.unsplash.com/photo-1629202758155-22b3543d463d?q=80&w=2000&auto=format&fit=crop' },
-      { time: '18:20', title: '領裝備', place: 'Oshare', note: '位於機場附近', link: 'https://map.naver.com/p/search/오쉐어', desc: '領取預約好的登山裝備。請現場試穿確認尺寸合適。', tips: ['檢查冰爪是否有生鏽或損壞', '確認歸還時間'], image: 'https://images.unsplash.com/photo-1517172049103-67f0803c4f74?q=80&w=2000&auto=format&fit=crop' },
-      { time: '19:10', title: '入住', place: 'Urbanstay Jeju', note: '濟州市區', link: 'https://map.naver.com/p/search/어반스테이제주연동', desc: '位於蓮洞商圈，交通方便，樓下就有便利商店與餐廳。', tips: [], image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=2000&auto=format&fit=crop' }
-    ],
-    food: [
-      { name: '牛島花生冰淇淋', desc: '牛島特產花生粉灑在冰淇淋上，香氣濃郁。', link: '', image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=2000&auto=format&fit=crop', tips: [] },
-      { name: '漢拿山炒飯', desc: '在鐵板上將炒飯堆成火山形狀，淋上蛋液模擬岩漿。', link: '', image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=2000&auto=format&fit=crop', tips: [] }
-    ],
-    cafe: [
-      { name: 'Blanc Rocher', desc: '牛島最美的海景咖啡廳之一。', link: 'https://map.naver.com/p/search/블랑로쉐', image: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=2000&auto=format&fit=crop', tips: ['花生拿鐵是招牌'] }
-    ],
-    backup: [
-      { name: '涉地可支', desc: '韓劇《All In》拍攝地，步道平緩。', link: 'https://map.naver.com/p/search/섭지코지', image: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2000&auto=format&fit=crop', tips: [] }
+    id: 'day3', date: '12/06', title: 'Day 3: 牛島 & 城山', banner: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2000',
+    items: [
+      { time: '08:00', title: '搭船', place: '城山港', desc: '帶護照買票去牛島。', tips: ['填寫乘船單'], link: 'https://map.naver.com/p/search/성산포항종합여객터미널', image: 'https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?q=80&w=2000' },
+      { time: '10:20', title: '環島', place: '牛島 Udo', desc: '租電動車環島，吃花生冰。', link: 'https://map.naver.com/p/search/우도', image: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2000' },
+      { time: '16:00', title: '景點', place: '城山日出峰', desc: '看火山口，世界自然遺產。', link: 'https://map.naver.com/p/search/성산일출봉', image: 'https://images.unsplash.com/photo-1629202758155-22b3543d463d?q=80&w=2000' },
+      { time: '18:20', title: '領裝備', place: 'Oshare', desc: '去機場附近領登山裝備。', link: 'https://map.naver.com/p/search/오쉐어', image: 'https://images.unsplash.com/photo-1517172049103-67f0803c4f74?q=80&w=2000' }
     ]
   },
   day4: {
-    id: 'day4', date: '12/07', title: '漢拏山健行',
-    banner: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2070&auto=format&fit=crop',
-    route: [
-      { time: '07:00', title: '移動', place: '前往御里牧', note: 'Eorimok Trailhead', link: 'https://map.naver.com/p/search/어리목탐방로', desc: '建議早起出發，避免登山口停車場客滿。若搭公車請確認 240 號公車時刻表。', tips: ['車程約 30-40 分鐘', '早餐要吃飽'], image: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?q=80&w=2000&auto=format&fit=crop' },
-      { time: '07:30', title: '登山', place: '開始爬山', note: '御里牧路線上山', link: '', desc: '剛開始是一段森林路，之後視野會開闊。務必在入口處穿好冰爪。', tips: ['注意保暖', '適時補充水分'], image: 'https://images.unsplash.com/photo-1516655855035-d5215bcb5604?q=80&w=2000&auto=format&fit=crop' },
-      { time: '全天', title: '健行', place: '御里牧 - 靈室', note: '享受雪景與挑戰', link: '', desc: '抵達威瑟岳避難所後，可以休息吃泡麵（需自備熱水）。下山走靈室路線，風景如畫。', tips: ['避難所有廁所', '垃圾請自行帶下山'], image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2000&auto=format&fit=crop' },
-      { time: '傍晚', title: '下山', place: '靈室登山口', note: 'Yeongsil Trailhead', link: 'https://map.naver.com/p/search/영실탐방로', desc: '下山後需走到停車場或公車站。若太累可請計程車排班處叫車。', tips: [], image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop' },
-      { time: '晚上', title: '晚餐', place: '市區黑豬肉', note: '犒賞自己的一餐', link: '', desc: '爬完山最適合吃油滋滋的黑豬肉燒烤補充體力！', tips: [], image: 'https://images.unsplash.com/photo-1596627008770-e4b752496a78?q=80&w=2000&auto=format&fit=crop' }
-    ],
-    food: [
-      { name: '黑豚家', desc: '老字號黑豬肉，炭火香氣十足。', link: 'https://map.naver.com/p/search/흑돈가', image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2000&auto=format&fit=crop', tips: [] },
-      { name: '校村炸雞', desc: '蜂蜜炸雞外皮酥脆，適合外帶回飯店當宵夜。', link: 'https://map.naver.com/p/search/교촌치킨', image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?q=80&w=2000&auto=format&fit=crop', tips: [] },
-    ],
-    cafe: [],
-    backup: [
-      { name: '1100高地', desc: '如果不爬山，開車到這裡也能輕鬆看到漢拏山的雪景。', link: 'https://map.naver.com/p/search/1100고지', image: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?q=80&w=2000&auto=format&fit=crop', tips: ['冬天路面可能結冰，開車小心'] }
+    id: 'day4', date: '12/07', title: 'Day 4: 漢拏山健行', banner: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2000',
+    items: [
+      { time: '07:00', title: '出發', place: '御里牧登山口', desc: '早起出發，準備爬山。', link: 'https://map.naver.com/p/search/어리목탐방로', image: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?q=80&w=2000' },
+      { time: '全天', title: '健行', place: '御里牧 - 靈室', desc: '雪景最美的路線，不登頂。', tips: ['帶冰爪', '帶熱水泡麵'], link: '', image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2000' },
+      { time: '晚上', title: '晚餐', place: '黑豬肉燒烤', desc: '下山後犒賞自己吃肉。', link: 'https://map.naver.com/p/search/흑돈가', image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2000' }
     ]
   },
   day5: {
-    id: 'day5', date: '12/08', title: '採買 & 返程',
-    banner: 'https://images.unsplash.com/photo-1535189043414-47a3c49a0bed?q=80&w=2070&auto=format&fit=crop',
-    route: [
-      { time: '早上', title: '採買', place: '東門傳統市場', note: '伴手禮最後衝刺', link: 'https://map.naver.com/p/search/동문재래시장', desc: '離機場最近的大型市場。可以買到橘子巧克力、橘子乾、Omegi 糕等特產。', tips: ['Gate 8 附近有很多吃的', '水果可以試吃'], image: 'https://images.unsplash.com/photo-1533920145389-d08019741817?q=80&w=2000&auto=format&fit=crop' },
-      { time: '下午', title: '彈性', place: '補齊未去景點', note: '海邊咖啡發呆', link: '', desc: '旅程的最後，找間喜歡的咖啡廳寫寫明信片，或去海邊做最後的道別。', tips: [], image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop' },
-      { time: '19:00', title: '歸還', place: 'Oshare 裝備', note: '檢查裝備無損壞', link: 'https://map.naver.com/p/search/오쉐어', desc: '將租借的登山裝備歸還。', tips: ['請確認沒有遺漏個人物品在背包裡'], image: 'https://images.unsplash.com/photo-1517172049103-67f0803c4f74?q=80&w=2000&auto=format&fit=crop' },
-      { time: '20:00', title: '還車', place: 'LOTTE Rent-a-Car', note: '預留時間接駁', link: 'https://map.naver.com/p/search/롯데렌터카제주오토하우스', desc: '開回租車公司還車，工作人員會快速檢查油量與車況。搭乘接駁車前往機場。', tips: ['請加滿油再還車', '檢查車上垃圾是否清空'], image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2000&auto=format&fit=crop' },
-      { time: '22:15', title: '飛機', place: '返回台北', note: '再見濟州', link: 'https://map.naver.com/p/search/제주국제공항', desc: '帶著滿滿的回憶與戰利品回家。', tips: [], image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop' }
-    ],
-    food: [
-      { name: '東門市場小吃', desc: '糖餅、魚板、辣炒年糕，各種韓國街頭小吃一次滿足。', link: '', image: 'https://images.unsplash.com/photo-1580651315530-69c8e0026377?q=80&w=2000&auto=format&fit=crop', tips: [] },
-      { name: '真情鮑魚海鮮砂鍋', desc: '機場附近美食，湯頭鮮美，鮑魚是活的。', link: 'https://map.naver.com/p/search/진정성', image: 'https://images.unsplash.com/photo-1625937759420-26d7e6a7156c?q=80&w=2000&auto=format&fit=crop', tips: [] },
-    ],
-    cafe: [
-      { name: 'Cafe Layered', desc: '倫敦貝果博物館隔壁，主打英式司康與可愛蛋糕，非常好拍。', link: 'https://map.naver.com/p/search/카페레이어드제주', image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=2000&auto=format&fit=crop', tips: [] },
-    ],
-    backup: []
+    id: 'day5', date: '12/08', title: 'Day 5: 採買 & 返程', banner: 'https://images.unsplash.com/photo-1535189043414-47a3c49a0bed?q=80&w=2000',
+    items: [
+      { time: '早上', title: '採買', place: '東門市場', desc: '買伴手禮最後衝刺。', link: 'https://map.naver.com/p/search/동문재래시장', image: 'https://images.unsplash.com/photo-1533920145389-d08019741817?q=80&w=2000' },
+      { time: '20:00', title: '還車', place: 'LOTTE Rent-a-Car', desc: '還車搭接駁車去機場。', link: 'https://map.naver.com/p/search/롯데렌터카제주오토하우스', image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2000' },
+      { time: '22:15', title: '飛機', place: '返回台北', desc: '再見濟州！', link: 'https://map.naver.com/p/search/제주국제공항', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000' }
+    ]
   }
 };
 
