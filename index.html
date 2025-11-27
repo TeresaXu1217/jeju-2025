@@ -8,10 +8,10 @@
     <meta name="description" content="Jeju Trip 2025" />
     <title>Jeju Trip 2025</title>
     
-    <!-- 強制載入 Tailwind CSS (解決純文字) -->
+    <!-- 關鍵：強制載入 Tailwind CSS 樣式表 -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 設定顏色：加深了文字顏色以避免與背景打架 -->
+    <!-- 設定專屬顏色 -->
     <script>
       tailwind.config = {
         theme: {
@@ -20,8 +20,7 @@
               wine: '#86473F',   /* 酒紅 */
               coffee: '#B35C37', /* 深咖 */
               bg: '#F5F4F0',     /* 米白背景 */
-              text: '#333333',   /* 加深文字顏色，避免看不清楚 */
-              'text-light': '#666666'
+              text: '#333333'    /* 深灰文字 (加深以利閱讀) */
             },
             fontFamily: {
               sans: ['Zen Maru Gothic', 'sans-serif'],
