@@ -11,8 +11,8 @@ import {
 const JapaneseTexture = () => (
   <div className="fixed inset-0 pointer-events-none z-0" 
        style={{ 
-         // 📷 [背景更換] 這裡指向 public/sea.jpg
-         backgroundImage: 'url("/sea.jpg")', 
+         // 📷 [背景更換] 若您的照片在 public/images/sea.jpg，請用此路徑
+         backgroundImage: 'url("/images/sea.jpg")', 
          backgroundSize: 'cover',
          backgroundPosition: 'center',
          backgroundRepeat: 'no-repeat',
@@ -71,100 +71,105 @@ const SCHEDULE_DATA = {
     id: 'day1', date: '12/04', title: '抵達 + Aewol 西岸放鬆',
     banner: 'https://images.unsplash.com/photo-1548115184-bc6544d06a58?q=80&w=2070&auto=format&fit=crop',
     route: [
-      { time: '06:05', title: '抵達', place: '濟州國際機場', note: '出關領行李', link: 'https://map.naver.com/p/search/제주국제공항', desc: '抵達後請先連上機場 Wi-Fi。', tips: ['機場便利商店', 'T-money 卡'], image: 'https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?q=80&w=2000&auto=format&fit=crop' },
-      { time: '07:00', title: '租車', place: 'LOTTE Rent-a-Car', note: 'Auto House 取車', link: 'https://map.naver.com/p/search/롯데렌터카제주오토하우스', desc: '搭乘接駁車前往取車。', tips: ['檢查車輛外觀', '確認燃油種類'], image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop' },
-      { time: '08:30', title: '咖啡放鬆', place: 'Bomnal Café', note: '心情好又暖拍攝地', link: 'https://map.naver.com/p/search/봄날카페', desc: '位於涯月邑咖啡街的起點。', tips: ['建議點熱拿鐵'], image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2000&auto=format&fit=crop' },
-      { time: '10:30', title: '散步拍照', place: '協載海灘', note: '濟州島最美果凍海', link: 'https://map.naver.com/p/search/협재해수욕장', desc: '以其獨特的祖母綠海水顏色聞名。', tips: ['推薦與堆疊許願石合照'], image: 'https://images.unsplash.com/photo-1548115184-bc6544d06a58?q=80&w=2000&auto=format&fit=crop' },
-      { time: '12:30', title: '午餐', place: 'Aewol 附近', note: '自由選擇', link: '', desc: '推薦海鮮拉麵或黑豬肉。', tips: [], image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2000&auto=format&fit=crop' },
-      { time: '20:00', title: '入住', place: '第一晚住宿', note: 'Aewol Coastal-ro', link: 'https://map.naver.com/p/search/제주애월해안로21104', desc: '第一晚入住西岸海景民宿。', tips: ['確認 Check-in 時間'], image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000&auto=format&fit=crop' },
+      { time: '06:05', title: '抵達', place: '濟州國際機場', note: '出關領行李，準備開始旅程', link: 'https://map.naver.com/p/search/제주국제공항', desc: '抵達後請先連上機場 Wi-Fi。出關後跟隨指示牌前往租車接駁區 (Rent-a-car Shuttle)。', tips: ['機場便利商店可先買水或 T-money 卡', '廁所建議先上'], image: 'https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?q=80&w=2000&auto=format&fit=crop' },
+      { time: '07:00', title: '租車', place: 'LOTTE Rent-a-Car', note: '搭乘接駁車前往 Auto House', link: 'https://map.naver.com/p/search/롯데렌터카제주오토하우스', desc: '濟州島最大的租車公司之一。抵達後請抽取號碼牌，準備好護照、台灣駕照、國際駕照與信用卡。', tips: ['請務必檢查車輛外觀並錄影', '確認燃油種類 (汽油/柴油/LPG)'], image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop' },
+      { time: '08:30', title: '咖啡放鬆', place: 'Bomnal Café', note: '韓劇《心情好又暖》拍攝地', link: 'https://map.naver.com/p/search/봄날카페', desc: '位於涯月邑咖啡街的起點，擁有無敵海景。這裡的柯基犬是鎮店之寶。', tips: ['戶外座位風大，請拉緊外套', '建議點熱拿鐵暖身'], image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2000&auto=format&fit=crop' },
+      { time: '10:30', title: '散步拍照', place: '協載海灘', note: '濟州島最美的果凍海', link: 'https://map.naver.com/p/search/협재해수욕장', desc: '以其獨特的祖母綠海水顏色聞名，對面就是飛揚島。退潮時可以走到很遠的地方。', tips: ['這裡風沙較大，注意相機鏡頭', '推薦與堆疊的許願石合照'], image: 'https://images.unsplash.com/photo-1548115184-bc6544d06a58?q=80&w=2000&auto=format&fit=crop' },
+      { time: '12:30', title: '午餐', place: 'Aewol 附近', note: '自由選擇，詳見下方美食推薦', link: '', desc: '涯月邑有許多海鮮拉麵與黑豬肉餐廳，是覓食的好地方。', tips: [], image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2000&auto=format&fit=crop' },
+      { time: '20:00', title: '入住', place: '第一晚住宿', note: 'Aewol Coastal-ro', link: 'https://map.naver.com/p/search/제주애월해안로21104', desc: '第一晚入住西岸海景民宿，聽著海浪聲入睡。', tips: ['請確認 Check-in 密碼或櫃檯時間'], image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000&auto=format&fit=crop' },
     ],
     food: [
-      { name: 'Nolman 海鮮拉麵', desc: '湯頭鮮甜，海鮮給得很大方。', link: 'https://map.naver.com/p/search/놀맨', image: 'https://images.unsplash.com/photo-1569562211093-4ed0d0758f12?q=80&w=2000&auto=format&fit=crop', tips: ['需抽取號碼牌', '只收現金'] },
-      { name: 'Crab Jack', desc: '美式手抓海鮮。', link: 'https://map.naver.com/p/search/크랩잭', image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2000&auto=format&fit=crop', tips: ['提供木槌敲螃蟹'] }
+      { name: 'Nolman 海鮮拉麵', desc: '無限挑戰拍攝地，湯頭鮮甜，海鮮給得很大方。', link: 'https://map.naver.com/p/search/놀맨', image: 'https://images.unsplash.com/photo-1569562211093-4ed0d0758f12?q=80&w=2000&auto=format&fit=crop', tips: ['需抽取號碼牌', '只收現金 (建議確認)'] },
+      { name: 'Crab Jack', desc: '美式手抓海鮮，將滿滿的海鮮倒在桌上，視覺效果滿分。', link: 'https://map.naver.com/p/search/크랩잭', image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2000&auto=format&fit=crop', tips: ['提供木槌敲螃蟹，舒壓好吃'] }
     ],
     cafe: [
-      { name: 'Cafe Knotted', desc: '首爾超人氣甜甜圈。', link: 'https://map.naver.com/p/search/노티드제주', image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=2000&auto=format&fit=crop', tips: ['通常需要排隊'] },
-      { name: 'Tribe', desc: '可愛的造型馬卡龍。', link: 'https://map.naver.com/p/search/트라이브', image: 'https://images.unsplash.com/photo-1529385075673-4e4b52c0879f?q=80&w=2000&auto=format&fit=crop', tips: [] }
+      { name: 'Cafe Knotted', desc: '首爾超人氣甜甜圈的濟州分店，擁有可愛的戶外庭園。', link: 'https://map.naver.com/p/search/노티드제주', image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=2000&auto=format&fit=crop', tips: ['通常需要排隊', '濟州限定綠茶口味必點'] },
+      { name: 'Tribe', desc: '以可愛的造型馬卡龍與舒芙蕾鬆餅聞名。', link: 'https://map.naver.com/p/search/트라이브', image: 'https://images.unsplash.com/photo-1529385075673-4e4b52c0879f?q=80&w=2000&auto=format&fit=crop', tips: [] }
     ],
     backup: [
-      { name: 'Arte Museum', desc: '沉浸式光影藝術展。', link: 'https://map.naver.com/p/search/아르떼뮤지엄제주', image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2000&auto=format&fit=crop', tips: ['雨天首選備案'] }
+      { name: 'Arte Museum', desc: '韓國最大的沉浸式光影藝術展，雨天首選備案。', link: 'https://map.naver.com/p/search/아르떼뮤지엄제주', image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2000&auto=format&fit=crop', tips: ['館內較暗，走路小心', 'Wave 展區非常壯觀'] }
     ]
   },
   day2: {
     id: 'day2', date: '12/05', title: '9.81 Park → 綠茶 → 西歸浦',
     banner: 'https://images.unsplash.com/photo-1570535384203-999990818c39?q=80&w=2046&auto=format&fit=crop',
     route: [
-      { time: '09:00', title: '前往', place: '9.81 Park', note: '重力賽車主題公園', link: 'https://map.naver.com/p/search/9.81파크', desc: '不使用引擎，僅靠重力加速度俯衝。', tips: ['不能穿拖鞋'], image: 'https://images.unsplash.com/photo-1570535384203-999990818c39?q=80&w=2000&auto=format&fit=crop' },
-      { time: '12:40', title: '午餐', place: '濟州堂', note: 'Jejudang Bakery Cafe', link: 'https://map.naver.com/p/search/제주당베이커리', desc: '大型農倉風格烘焙咖啡廳。', tips: ['洋蔥麵包是招牌'], image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=2000&auto=format&fit=crop' },
-      { time: '15:00', title: '觀光', place: 'O’Sulloc 綠茶博物館', note: 'Innisfree House', link: 'https://map.naver.com/p/search/오설록티뮤지엄', desc: '韓國著名的茶葉品牌博物館。', tips: ['必吃綠茶冰淇淋'], image: 'https://images.unsplash.com/photo-1571506165871-ee72a35bc3d4?q=80&w=2000&auto=format&fit=crop' },
-      { time: '17:30', title: '入住', place: 'Heyy Seogwipo', note: '西歸浦市區飯店', link: 'https://map.naver.com/p/search/헤이서귀포', desc: '位於西歸浦市中心，設計簡約。', tips: [], image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=2000&auto=format&fit=crop' },
-      { time: '18:00', title: '晚餐', place: '每日偶來市場', note: '體驗夜市小吃', link: 'https://map.naver.com/p/search/서귀포매일올레시장', desc: '西歸浦最大的傳統市場。', tips: ['推薦橘子麻糬'], image: 'https://images.unsplash.com/photo-1533920145389-d08019741817?q=80&w=2000&auto=format&fit=crop' }
+      { time: '09:00', title: '前往', place: '9.81 Park', note: '全球首座重力賽車主題公園', link: 'https://map.naver.com/p/search/9.81파크', desc: '不使用引擎，僅靠重力加速度俯衝的賽車體驗。車上會自動錄影。', tips: ['不能穿拖鞋/高跟鞋 (現場有賣鞋套)', '建議下載 9.81 App 綁定票券'], image: 'https://images.unsplash.com/photo-1570535384203-999990818c39?q=80&w=2000&auto=format&fit=crop' },
+      { time: '12:40', title: '午餐', place: '濟州堂', note: 'Jejudang Bakery Cafe', link: 'https://map.naver.com/p/search/제주당베이커리', desc: '近期爆紅的大型農倉風格烘焙咖啡廳，空間開闊。', tips: ['洋蔥麵包是招牌', '適合拍照的角落很多'], image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=2000&auto=format&fit=crop' },
+      { time: '15:00', title: '觀光', place: 'O’Sulloc 綠茶博物館', note: 'Innisfree House 也在旁邊', link: 'https://map.naver.com/p/search/오설록티뮤지엄', desc: '韓國著名的茶葉品牌博物館。旁邊的 Innisfree 濟州屋可以製作手工皂。', tips: ['必吃綠茶冰淇淋與綠茶捲', '戶外茶園小心泥土'], image: 'https://images.unsplash.com/photo-1571506165871-ee72a35bc3d4?q=80&w=2000&auto=format&fit=crop' },
+      { time: '17:30', title: '入住', place: 'Heyy Seogwipo', note: '西歸浦市區飯店', link: 'https://map.naver.com/p/search/헤이서귀포', desc: '位於西歸浦市中心，設計簡約現代，距離偶來市場步行可達。', tips: ['大廳有提供旅遊資訊'], image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=2000&auto=format&fit=crop' },
+      { time: '18:00', title: '晚餐', place: '每日偶來市場', note: '體驗濟州夜市小吃', link: 'https://map.naver.com/p/search/서귀포매일올레시장', desc: '西歸浦最大的傳統市場。中間有水道座位區，買了小吃可以直接坐著吃。', tips: ['推薦橘子麻糬、黑豬肉捲、蒜味炸雞'], image: 'https://images.unsplash.com/photo-1533920145389-d08019741817?q=80&w=2000&auto=format&fit=crop' }
     ],
     food: [
-      { name: '偶來市場 橘子麻糬', desc: '現做的麻糬包入整顆濟州橘子。', link: 'https://map.naver.com/p/search/서귀포매일올레시장', image: 'https://images.unsplash.com/photo-1634547372295-82736b47f074?q=80&w=2000&auto=format&fit=crop', tips: [] },
-      { name: '炸黑豬肉捲', desc: '類似春捲，裡面包著黑豬肉。', link: '', image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2000&auto=format&fit=crop', tips: [] },
+      { name: '偶來市場 橘子麻糬', desc: '現做的麻糬包入整顆濟州橘子，酸甜多汁。', link: 'https://map.naver.com/p/search/서귀포매일올레시장', image: 'https://images.unsplash.com/photo-1634547372295-82736b47f074?q=80&w=2000&auto=format&fit=crop', tips: [] },
+      { name: '炸黑豬肉捲', desc: '類似春捲，裡面包著黑豬肉與蔬菜。', link: '', image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2000&auto=format&fit=crop', tips: [] },
     ],
     cafe: [
-      { name: 'Innisfree House', desc: '大片落地窗看茶園。', link: 'https://map.naver.com/p/search/이니스프리제주하우스', image: 'https://images.unsplash.com/photo-1621245033722-1925b6a7a726?q=80&w=2000&auto=format&fit=crop', tips: [] },
+      { name: 'Innisfree House', desc: '就在綠茶博物館旁，大片落地窗看茶園。', link: 'https://map.naver.com/p/search/이니스프리제주하우스', image: 'https://images.unsplash.com/photo-1621245033722-1925b6a7a726?q=80&w=2000&auto=format&fit=crop', tips: [] },
     ],
     backup: [
-      { name: '大浦柱狀節理帶', desc: '大自然的鬼斧神工。', link: 'https://map.naver.com/p/search/주상절리대', image: 'https://images.unsplash.com/photo-1629202758155-22b3543d463d?q=80&w=2000&auto=format&fit=crop', tips: ['需購買門票'] }
+      { name: '大浦柱狀節理帶', desc: '大自然的鬼斧神工，六角形的石柱群直插入海。', link: 'https://map.naver.com/p/search/주상절리대', image: 'https://images.unsplash.com/photo-1629202758155-22b3543d463d?q=80&w=2000&auto=format&fit=crop', tips: ['需購買門票', '風非常大'] }
     ]
   },
   day3: {
     id: 'day3', date: '12/06', title: 'Day 3: 牛島 & 城山',
     banner: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2070&auto=format&fit=crop',
+    // ✅ 修正：統一改為 route
     route: [
-      { time: '08:00', title: '出發', place: '城山港', note: '前往牛島的碼頭', link: 'https://map.naver.com/p/search/성산포항종합여객터미널', desc: '請在此填寫乘船申報單。', tips: ['一定要帶護照'], image: 'https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?q=80&w=2000&auto=format&fit=crop' },
-      { time: '10:20', title: '環島', place: '牛島 Udo', note: '租電動車/腳踏車', link: 'https://map.naver.com/p/search/우도', desc: '濟州的離島，海水清澈見底。', tips: ['租車需國際駕照'], image: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2000&auto=format&fit=crop' },
-      { time: '16:00', title: '景點', place: '城山日出峰', note: '世界自然遺產', link: 'https://map.naver.com/p/search/성산일출봉', desc: '巨大的火山噴發口。', tips: ['登頂約需 20-30 分鐘'], image: 'https://images.unsplash.com/photo-1629202758155-22b3543d463d?q=80&w=2000&auto=format&fit=crop' },
-      { time: '18:20', title: '領裝備', place: 'Oshare', note: '位於機場附近', link: 'https://map.naver.com/p/search/오쉐어', desc: '領取預約好的登山裝備。', tips: ['檢查冰爪'], image: 'https://images.unsplash.com/photo-1517172049103-67f0803c4f74?q=80&w=2000&auto=format&fit=crop' },
-      { time: '19:10', title: '入住', place: 'Urbanstay Jeju', note: '濟州市區', link: 'https://map.naver.com/p/search/어반스테이제주연동', desc: '位於蓮洞商圈。', tips: [], image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=2000&auto=format&fit=crop' }
+      { time: '08:00', title: '出發', place: '城山港', note: '前往牛島的碼頭', link: 'https://map.naver.com/p/search/성산포항종합여객터미널', desc: '請在此填寫乘船申報單 (一式兩份，來回各一張)，並連同護照、現金購買船票。', tips: ['一定要帶護照！', '確認末班船時間'], image: 'https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?q=80&w=2000&auto=format&fit=crop' },
+      { time: '10:20', title: '環島', place: '牛島 Udo', note: '租電動車/腳踏車', link: 'https://map.naver.com/p/search/우도', desc: '濟州的離島，海水清澈見底。租一台可愛的電動車環島是最好的方式。', tips: ['租車需出示國際駕照', '推薦西濱白沙、下古水洞海灘'], image: 'https://images.unsplash.com/photo-1549887552-93f8efb4133f?q=80&w=2000&auto=format&fit=crop' },
+      { time: '16:00', title: '景點', place: '城山日出峰', note: '世界自然遺產', link: 'https://map.naver.com/p/search/성산일출봉', desc: '巨大的火山噴發口。如果不爬到頂，旁邊的免費步道也能拍到很美的側面與海景。', tips: ['登頂約需 20-30 分鐘 (階梯多)', '每月第一個週一公休 (請確認)'], image: 'https://images.unsplash.com/photo-1629202758155-22b3543d463d?q=80&w=2000&auto=format&fit=crop' },
+      { time: '18:20', title: '領裝備', place: 'Oshare', note: '位於機場附近', link: 'https://map.naver.com/p/search/오쉐어', desc: '領取預約好的登山裝備 (鞋子、冰爪、登山杖等)。請現場試穿確認尺寸合適。', tips: ['檢查冰爪是否有生鏽或損壞', '確認歸還時間'], image: 'https://images.unsplash.com/photo-1517172049103-67f0803c4f74?q=80&w=2000&auto=format&fit=crop' },
+      { time: '19:10', title: '入住', place: 'Urbanstay Jeju', note: '濟州市區', link: 'https://map.naver.com/p/search/어반스테이제주연동', desc: '位於蓮洞商圈，交通方便，樓下就有便利商店與餐廳。', tips: [], image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=2000&auto=format&fit=crop' }
     ],
     food: [
-      { name: '牛島花生冰淇淋', desc: '牛島特產花生粉灑在冰淇淋上。', link: '', image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=2000&auto=format&fit=crop', tips: [] },
-      { name: '漢拿山炒飯', desc: '在鐵板上將炒飯堆成火山形狀。', link: '', image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=2000&auto=format&fit=crop', tips: [] }
+      { name: '牛島花生冰淇淋', desc: '牛島特產花生粉灑在冰淇淋上，香氣濃郁。', link: '', image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=2000&auto=format&fit=crop', tips: [] },
+      { name: '漢拿山炒飯', desc: '在鐵板上將炒飯堆成火山形狀，淋上蛋液模擬岩漿，好吃又好拍。', link: '', image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=2000&auto=format&fit=crop', tips: [] }
     ],
     cafe: [
-      { name: 'Blanc Rocher', desc: '牛島最美的海景咖啡廳之一。', link: 'https://map.naver.com/p/search/블랑로쉐', image: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=2000&auto=format&fit=crop', tips: ['花生拿鐵'] }
+      { name: 'Blanc Rocher', desc: '牛島最美的海景咖啡廳之一，戶外座位可以直接看到藍綠色的大海。', link: 'https://map.naver.com/p/search/블랑로쉐', image: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=2000&auto=format&fit=crop', tips: ['花生拿鐵是招牌'] }
     ],
     backup: [
-      { name: '涉地可支', desc: '韓劇《All In》拍攝地，步道平緩。', link: 'https://map.naver.com/p/search/섭지코지', image: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2000&auto=format&fit=crop', tips: [] }
+      { name: '涉地可支', desc: '韓劇《All In》拍攝地，步道平緩，適合看日落與奇岩怪石。', link: 'https://map.naver.com/p/search/섭지코지', image: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2000&auto=format&fit=crop', tips: [] }
     ]
   },
   day4: {
     id: 'day4', date: '12/07', title: 'Day 4: 漢拏山健行',
     banner: 'https://images.unsplash.com/photo-1610368307274-12349899321e?q=80&w=2070&auto=format&fit=crop',
+    // ✅ 修正：統一改為 route
     route: [
-      { time: '07:00', title: '移動', place: '前往御里牧', note: 'Eorimok Trailhead', link: 'https://map.naver.com/p/search/어리목탐방로', desc: '建議早起出發，避免登山口停車場客滿。', tips: ['車程約 30-40 分鐘'], image: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?q=80&w=2000&auto=format&fit=crop' },
-      { time: '07:30', title: '登山', place: '開始爬山', note: '御里牧路線上山', link: '', desc: '剛開始是一段森林路，之後視野會開闊。', tips: ['注意保暖'], image: 'https://images.unsplash.com/photo-1516655855035-d5215bcb5604?q=80&w=2000&auto=format&fit=crop' },
-      { time: '全天', title: '健行', place: '御里牧 - 靈室', note: '享受雪景', link: '', desc: '抵達威瑟岳避難所後，可以休息吃泡麵。', tips: ['避難所有廁所'], image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2000&auto=format&fit=crop' },
-      { time: '傍晚', title: '下山', place: '靈室登山口', note: 'Yeongsil Trailhead', link: 'https://map.naver.com/p/search/영실탐방로', desc: '下山後需走到停車場或公車站。若太累可請計程車排班處叫車。', tips: ['可請計程車排班處叫車'], image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop' },
-      { time: '晚上', title: '晚餐', place: '市區黑豬肉', note: '犒賞自己的一餐', link: '', desc: '爬完山最適合吃油滋滋的黑豬肉燒烤！', tips: [], image: 'https://images.unsplash.com/photo-1596627008770-e4b752496a78?q=80&w=2000&auto=format&fit=crop' }
+      { time: '07:00', title: '移動', place: '前往御里牧', note: 'Eorimok Trailhead', link: 'https://map.naver.com/p/search/어리목탐방로', desc: '建議早起出發，避免登山口停車場客滿。若搭公車請確認 240 號公車時刻表。', tips: ['車程約 30-40 分鐘', '早餐要吃飽'], image: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?q=80&w=2000&auto=format&fit=crop' },
+      { time: '07:30', title: '登山', place: '開始爬山', note: '御里牧路線上山', link: '', desc: '剛開始是一段森林路，之後視野會開闊。務必在入口處穿好冰爪。', tips: ['注意保暖', '適時補充水分'], image: 'https://images.unsplash.com/photo-1516655855035-d5215bcb5604?q=80&w=2000&auto=format&fit=crop' },
+      { time: '全天', title: '健行', place: '御里牧 - 靈室', note: '享受雪景與挑戰', link: '', desc: '抵達威瑟岳避難所後，可以休息吃泡麵（需自備熱水）。下山走靈室路線，風景如畫。', tips: ['避難所有廁所', '垃圾請自行帶下山'], image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2000&auto=format&fit=crop' },
+      { time: '傍晚', title: '下山', place: '靈室登山口', note: 'Yeongsil Trailhead', link: 'https://map.naver.com/p/search/영실탐방로', desc: '下山後需走到停車場或公車站。若太累可請計程車排班處叫車（如果不幸沒有車，可能要走一段路到大馬路）。', tips: [], image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop' },
+      { time: '晚上', title: '晚餐', place: '市區黑豬肉', note: '犒賞自己的一餐', link: '', desc: '爬完山最適合吃油滋滋的黑豬肉燒烤補充體力！', tips: [], image: 'https://images.unsplash.com/photo-1596627008770-e4b752496a78?q=80&w=2000&auto=format&fit=crop' }
     ],
     food: [
-      { name: '黑豚家', desc: '老字號黑豬肉，炭火香氣十足。', link: 'https://map.naver.com/p/search/흑돈가', image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2000&auto=format&fit=crop', tips: [] },
+      { name: '黑豚家', desc: '老字號黑豬肉，炭火香氣十足，沾鯷魚醬吃是濟州道地吃法。', link: 'https://map.naver.com/p/search/흑돈가', image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2000&auto=format&fit=crop', tips: [] },
       { name: '校村炸雞', desc: '蜂蜜炸雞外皮酥脆，適合外帶回飯店當宵夜。', link: 'https://map.naver.com/p/search/교촌치킨', image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?q=80&w=2000&auto=format&fit=crop', tips: [] },
     ],
     cafe: [],
     backup: [
-      { name: '1100高地', desc: '如果不爬山，開車到這裡也能輕鬆看到漢拏山的雪景。', link: 'https://map.naver.com/p/search/1100고지', image: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?q=80&w=2000&auto=format&fit=crop', tips: ['冬天路面可能結冰，開車小心'] }
+      { name: '1100高地', desc: '如果不爬山，開車到這裡也能輕鬆看到漢拏山的雪景與濕地生態。', link: 'https://map.naver.com/p/search/1100고지', image: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?q=80&w=2000&auto=format&fit=crop', tips: ['冬天路面可能結冰，開車小心'] }
     ]
   },
   day5: {
     id: 'day5', date: '12/08', title: 'Day 5: 採買 & 返程',
     banner: 'https://images.unsplash.com/photo-1535189043414-47a3c49a0bed?q=80&w=2000',
+    // ✅ 修正：統一改為 route
     route: [
-      { time: '早上', title: '採買', place: '東門市場', note: '伴手禮最後衝刺', link: 'https://map.naver.com/p/search/동문재래시장', desc: '離機場最近的大型市場。', tips: ['Gate 8 附近有很多吃的'], image: 'https://images.unsplash.com/photo-1533920145389-d08019741817?q=80&w=2000&auto=format&fit=crop' },
-      { time: '下午', title: '彈性', place: '補齊未去景點', note: '海邊咖啡發呆', link: '', desc: '旅程的最後，找間喜歡的咖啡廳寫寫明信片。', tips: [], image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop' },
-      { time: '19:00', title: '歸還', place: 'Oshare 裝備', note: '檢查裝備無損壞', link: 'https://map.naver.com/p/search/오쉐어', desc: '將租借的登山裝備歸還。', tips: ['確認無遺漏物品'], image: 'https://images.unsplash.com/photo-1517172049103-67f0803c4f74?q=80&w=2000&auto=format&fit=crop' },
-      { time: '20:00', title: '還車', place: 'LOTTE Rent-a-Car', note: '預留時間接駁', link: 'https://map.naver.com/p/search/롯데렌터카제주오토하우스', desc: '開回租車公司還車。', tips: ['請加滿油再還車'], image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2000&auto=format&fit=crop' },
-      { time: '22:15', title: '飛機', place: '返回台北', note: '再見濟州', link: 'https://map.naver.com/p/search/제주국제공항', desc: '帶著滿滿的回憶回家。', tips: [], image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop' }
+      { time: '早上', title: '採買', place: '東門市場', note: '伴手禮最後衝刺', link: 'https://map.naver.com/p/search/동문재래시장', desc: '離機場最近的大型市場。可以買到橘子巧克力、橘子乾、Omegi 糕等特產。', tips: ['Gate 8 附近有很多吃的', '水果可以試吃'], image: 'https://images.unsplash.com/photo-1533920145389-d08019741817?q=80&w=2000&auto=format&fit=crop' },
+      { time: '下午', title: '彈性', place: '補齊未去景點', note: '海邊咖啡發呆', link: '', desc: '旅程的最後，找間喜歡的咖啡廳寫寫明信片，或去海邊做最後的道別。', tips: [], image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop' },
+      { time: '19:00', title: '歸還', place: 'Oshare 裝備', note: '檢查裝備無損壞', link: 'https://map.naver.com/p/search/오쉐어', desc: '將租借的登山裝備歸還。', tips: ['請確認沒有遺漏個人物品在背包裡'], image: 'https://images.unsplash.com/photo-1517172049103-67f0803c4f74?q=80&w=2000&auto=format&fit=crop' },
+      { time: '20:00', title: '還車', place: 'LOTTE Rent-a-Car', note: '預留時間接駁', link: 'https://map.naver.com/p/search/롯데렌터카제주오토하우스', desc: '開回租車公司還車，工作人員會快速檢查油量與車況。搭乘接駁車前往機場。', tips: ['請加滿油再還車', '檢查車上垃圾是否清空'], image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2000&auto=format&fit=crop' },
+      { time: '22:15', title: '飛機', place: '返回台北', note: '再見濟州', link: 'https://map.naver.com/p/search/제주국제공항', desc: '帶著滿滿的回憶與戰利品回家。', tips: [], image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop' }
     ]
   }
 };
 
 export default function App() {
+  useTailwindCDN(); // 自動載入樣式 (以防萬一)
+
   const [activeCategory, setActiveCategory] = useState('home');
   const [activeDay, setActiveDay] = useState('day1');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -186,12 +191,6 @@ export default function App() {
   const handleCloseModal = () => {
     setModalOpen(false);
     setModalData(null);
-  };
-
-  // Use a more robust way to get route items, defaulting to empty array
-  const getRouteItems = (dayId) => {
-    const day = SCHEDULE_DATA[dayId];
-    return day && day.route ? day.route : [];
   };
 
   return (
@@ -231,6 +230,28 @@ export default function App() {
   );
 }
 
+// --- 輔助函數 (解決純文字問題的備案) ---
+const useTailwindCDN = () => {
+  useEffect(() => {
+    if (!document.querySelector('script[src*="tailwindcss"]')) {
+      const script = document.createElement('script');
+      script.src = "https://cdn.tailwindcss.com";
+      script.onload = () => {
+        window.tailwind.config = {
+          theme: {
+            extend: {
+              colors: { wine: '#86473F', coffee: '#B35C37', bg: '#F5F4F0', text: '#333333' },
+              fontFamily: { sans: ['Zen Maru Gothic', 'sans-serif'], serif: ['Noto Serif TC', 'serif'] }
+            }
+          }
+        };
+      };
+      document.head.appendChild(script);
+    }
+  }, []);
+};
+
+// --- 子組件 ---
 function WeatherWidget() {
   const [weather, setWeather] = useState(null);
   useEffect(() => {
@@ -246,20 +267,16 @@ function WeatherWidget() {
   );
 }
 
-// 核心修改：背景改為 bg-white (原本是 bg-bg)
 function DetailModal({ isOpen, onClose, data }) {
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
-
   useEffect(() => {
     if (data) {
-      // 使用更穩固的 Key (防止 undefined)
       const key = `jeju-note-${data.id || data.place || 'default'}`;
       setNote(localStorage.getItem(key) || '');
       setSaved(false);
     }
   }, [data]);
-
   const handleNoteChange = (e) => {
     const val = e.target.value;
     setNote(val);
@@ -268,15 +285,12 @@ function DetailModal({ isOpen, onClose, data }) {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
-
   if (!isOpen || !data) return null;
-
   return (
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
           <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-white transition-colors text-gray-800"><X size={20} /></button>
-          
           <div className="h-64 md:h-80 w-full relative">
             <img src={data.image || 'https://images.unsplash.com/photo-1528629297340-d1d466945dc5?q=80&w=2000'} alt={data.place || data.name} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -285,15 +299,12 @@ function DetailModal({ isOpen, onClose, data }) {
               <p className="text-white/80 tracking-widest uppercase text-sm font-medium">{data.title || data.desc?.slice(0, 20)}</p>
             </div>
           </div>
-
           <div className="p-6 md:p-8 space-y-8 bg-white">
             <div>
               <h3 className="text-sm font-bold tracking-[0.2em] text-[#888] uppercase mb-3 flex items-center"><Info size={16} className="mr-2"/> About</h3>
               <p className="text-text leading-relaxed text-lg font-light">{data.desc || "暫無詳細介紹"}</p>
             </div>
-
             {data.tips && <div className="bg-[#EBE9E4]/60 p-5 rounded-lg border border-[#E6E4DD]"><h3 className="text-sm font-bold tracking-[0.2em] text-[#888] uppercase mb-3 flex items-center"><AlertCircle size={16} className="mr-2"/> Travel Tips</h3><ul className="space-y-2">{data.tips.map((tip, i) => <li key={i} className="flex items-start text-sm text-text"><span className="mr-2 text-wine font-bold">•</span> {tip}</li>)}</ul></div>}
-            
             <div>
                <div className="flex justify-between items-center mb-3">
                  <h3 className="text-sm font-bold tracking-[0.2em] text-wine uppercase flex items-center"><Edit3 size={16} className="mr-2"/> My Notes</h3>
@@ -301,7 +312,6 @@ function DetailModal({ isOpen, onClose, data }) {
                </div>
                <textarea value={note} onChange={handleNoteChange} placeholder="在此貼上您的備註..." className="w-full h-32 p-4 bg-white border border-[#DDD] rounded focus:outline-none focus:border-wine focus:ring-1 focus:ring-wine text-sm leading-relaxed resize-none text-text"/>
             </div>
-
             <div className="pt-6 border-t border-[#E6E4DD] flex justify-end">
               {data.link ? <a href={data.link} target="_blank" rel="noreferrer" className="flex items-center space-x-2 bg-wine text-white px-6 py-3 rounded hover:bg-coffee transition-colors shadow-lg shadow-wine/20"><span>Open Naver Map</span> <ExternalLink size={16} /></a> : <button disabled className="bg-[#EEE] text-[#AAA] px-6 py-3 rounded cursor-not-allowed">No Link</button>}
             </div>
@@ -317,7 +327,6 @@ function HomeView({ onNavigate }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
       <div className="relative w-full h-[90vh] overflow-hidden">
         <div className="absolute inset-0 bg-black/30 z-10" />
-        {/* 📷 [圖片更換] 首頁大圖 */}
         <img src="/sea.jpg" onError={(e) => {e.target.src = 'https://images.unsplash.com/photo-1528629297340-d1d466945dc5?q=80&w=2244&auto=format&fit=crop'}} alt="Jeju Hero" className="w-full h-full object-cover animate-pan-slow" />
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white text-center px-4">
           <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}>
@@ -347,11 +356,7 @@ function InfoView({ data }) {
 function HikingView({ data }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto px-6 py-12">
-      <div className="relative rounded-xl overflow-hidden mb-12 h-64 md:h-80 shadow-lg">
-        {/* 📷 [圖片更換] 爬山大圖 */}
-        <img src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2076&auto=format&fit=crop" alt="Hallasan" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center flex-col text-white"><h1 className="text-4xl font-serif mb-2 text-white">Hallasan Hiking</h1><p className="tracking-widest text-sm opacity-90 text-white">漢拏山 • 雪地健行攻略</p></div>
-      </div>
+      <div className="relative rounded-xl overflow-hidden mb-12 h-64 md:h-80 shadow-lg"><img src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2076&auto=format&fit=crop" alt="Hallasan" className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/40 flex items-center justify-center flex-col text-white"><h1 className="text-4xl font-serif mb-2 text-white">Hallasan Hiking</h1><p className="tracking-widest text-sm opacity-90 text-white">漢拏山 • 雪地健行攻略</p></div></div>
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-12">
           <section><h3 className="text-xl font-serif text-text mb-4 flex items-center"><MapPin className="mr-2" size={18} /> 路線資訊</h3><div className="bg-white/90 p-6 rounded border border-[#E6E4DD] space-y-4"><div className="flex justify-between items-start border-b border-[#F0F0F0] pb-4"><div><h4 className="font-bold text-lg text-text">{data.route.name}</h4><p className="text-sm text-[#666] mt-1">{data.route.desc}</p></div><div className="text-right"><span className="block text-2xl font-light text-wine">{data.route.distance}</span><span className="text-xs text-[#888]">總距離</span></div></div><div className="grid grid-cols-2 gap-4 text-sm"><div><span className="block text-[#888] text-xs mb-1">預計耗時</span><span className="font-medium text-[#444]">{data.route.duration}</span></div><div><span className="block text-[#888] text-xs mb-1">預計氣溫</span><span className="font-medium text-[#444]">{data.route.temp}</span></div></div></div></section>
