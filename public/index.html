@@ -5,12 +5,13 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#F5F4F0" />
+    <meta name="description" content="Jeju Trip 2025" />
     <title>Jeju Trip 2025</title>
     
-    <!-- 1. 載入 Tailwind CSS -->
+    <!-- 1. 強制載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. 設定配色與字體 -->
+    <!-- 2. 設定您的專屬配色與字體 (日系極簡風) -->
     <script>
       tailwind.config = {
         theme: {
@@ -19,23 +20,22 @@
               wine: '#86473F',   /* 酒紅 */
               coffee: '#B35C37', /* 深咖 */
               bg: '#F5F4F0',     /* 米白背景 */
-              text: '#333333',   /* 深灰文字 */
-              white: '#ffffff'
+              text: '#444444',   /* 深灰文字 (比全黑更柔和) */
+              'text-light': '#888888'
             },
             fontFamily: {
-              sans: ['Montserrat', 'sans-serif'],
-              serif: ['Noto Serif TC', 'serif'],
-              body: ['Zen Kaku Gothic New', 'sans-serif'],
+              // 主要字體改為無襯線體 (Sans-Serif)
+              sans: ['Montserrat', 'Noto Sans TC', 'sans-serif'], 
             }
           }
         }
       }
     </script>
 
-    <!-- 3. 載入 Google Fonts -->
+    <!-- 3. 載入 Google Fonts (Montserrat + Noto Sans TC) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Noto+Serif+TC:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="root"></div>
