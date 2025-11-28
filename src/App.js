@@ -12,7 +12,7 @@ const JapaneseTexture = () => (
   <div className="fixed inset-0 pointer-events-none z-0" 
        style={{ 
          // 📷 [背景更換] 若您的照片在 public/images/sea.jpg，請用此路徑
-         backgroundImage: 'url("/images/sea.jpg")', 
+         backgroundImage: 'url("/public/images/sea.jpg")', 
          backgroundSize: 'cover',
          backgroundPosition: 'center',
          backgroundRepeat: 'no-repeat',
