@@ -98,13 +98,13 @@ function TravelMemoBoard({ storageKey }) {
       <p className="text-xs text-[#888] mb-3">想說什麼就寫什麼，你的專屬景點筆記空間</p>
 
       <div className="bg-[#FAFAFA] border border-[#EEE] rounded-sm p-4">
-        {/* 輸入區 */}
+        {/* 輸入區 - 已修正為響應式佈局 (手機垂直/電腦水平) */}
         <div className="flex flex-col gap-3 mb-4 border-b border-[#EEE] pb-4">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
              <select 
                value={cat} 
                onChange={(e) => setCat(e.target.value)}
-               className="p-2 border border-[#DDD] rounded text-sm focus:outline-none focus:border-wine text-[#555] bg-white"
+               className="p-2 border border-[#DDD] rounded text-sm focus:outline-none focus:border-wine text-[#555] bg-white w-full sm:w-auto"
              >
                {MEMO_CATEGORIES.map(c => <option key={c.id} value={c.label}>{c.label}</option>)}
              </select>
@@ -113,10 +113,10 @@ function TravelMemoBoard({ storageKey }) {
                value={newText} 
                onChange={(e) => setNewText(e.target.value)} 
                placeholder="輸入筆記..." 
-               className="flex-1 p-2 border border-[#DDD] rounded text-sm focus:outline-none focus:border-wine bg-white"
+               className="flex-1 p-2 border border-[#DDD] rounded text-sm focus:outline-none focus:border-wine bg-white w-full"
                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
              />
-             <button onClick={handleAdd} className="bg-wine text-white px-3 py-2 rounded text-sm hover:bg-coffee transition-colors flex items-center shrink-0">
+             <button onClick={handleAdd} className="bg-wine text-white px-3 py-2 rounded text-sm hover:bg-coffee transition-colors flex items-center justify-center shrink-0 w-full sm:w-auto">
                <Plus size={16} className="mr-1"/> 新增
              </button>
           </div>
