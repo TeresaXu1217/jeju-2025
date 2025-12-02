@@ -28,12 +28,12 @@ const CircleIcon = ({ char, colorClass = "border-text text-text" }) => (
   </span>
 );
 
-// --- 📝 旅行備忘錄 (留言板模式 - 統一唯一定義) ---
+// --- 📝 旅行備忘錄 (留言板模式) ---
 const MEMO_CATEGORIES = [
-  { id: 'food', label: '美食', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  { id: 'info', label: '資訊', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  { id: 'feature', label: '特色', color: 'bg-purple-100 text-purple-800 border-purple-200' },
-  { id: 'other', label: '其他', color: 'bg-gray-100 text-gray-800 border-gray-200' },
+  { id: 'food', label: '美食', color: 'bg-[#86473F]/10 text-[#86473F] border-[#86473F]/20' }, // 酒紅淡色
+  { id: 'info', label: '資訊', color: 'bg-[#B35C37]/10 text-[#B35C37] border-[#B35C37]/20' }, // 深咖淡色
+  { id: 'feature', label: '特色', color: 'bg-[#888888]/10 text-[#666666] border-[#888888]/20' }, // 灰色
+  { id: 'other', label: '其他', color: 'bg-[#A09F9C]/10 text-[#555555] border-[#A09F9C]/20' }, // 暖灰
 ];
 
 function TravelMemoBoard({ storageKey }) {
@@ -651,8 +651,8 @@ function InfoView({ data, onItemClick }) {
         {/* 住宿地圖按鈕: 酒紅VIEW MAP */}
         {hotel.link && <a href={hotel.link} target="_blank" rel="noreferrer" className="flex items-center justify-center px-4 py-2 bg-wine text-white text-xs tracking-widest rounded hover:bg-coffee transition-colors gap-2 font-bold"><span>VIEW MAP</span><ArrowRight size={14}/></a>}
         {/* 停車與指南按鈕: 深灰底塊 */}
-        {hotel.parkingInfo && <button className="flex items-center justify-center px-4 py-2 bg-[#444] text-white text-xs tracking-widest rounded hover:bg-[#222] transition-colors" onClick={() => alert(hotel.parkingInfo)}>停車資訊</button>}
-        {hotel.guideLink && <a href={hotel.guideLink} target="_blank" rel="noreferrer" className="flex items-center justify-center px-4 py-2 bg-[#444] text-white text-xs tracking-widest rounded hover:bg-[#222] transition-colors">住宿指南</a>}
+        {hotel.parkingInfo && <button className="flex items-center justify-center px-4 py-2 bg-[#666] text-white text-xs tracking-widest rounded hover:bg-[#444] transition-colors" onClick={() => alert(hotel.parkingInfo)}>停車資訊</button>}
+        {hotel.guideLink && <a href={hotel.guideLink} target="_blank" rel="noreferrer" className="flex items-center justify-center px-4 py-2 bg-[#666] text-white text-xs tracking-widest rounded hover:bg-[#444] transition-colors">住宿指南</a>}
       </div></div>))}</div></section>
       
       {/* 3. 租車資訊 */}
@@ -712,35 +712,9 @@ function InfoView({ data, onItemClick }) {
         <div><SectionTitle icon={<ShoppingBag size={20} strokeWidth={1.5} />} title="必帶物品 Checklist" /><div className="mt-6 grid grid-cols-2 gap-3">{data.packing.map((item, i) => (<div key={i} className="flex items-center space-x-2 text-sm text-[#555]"><div className="w-1.5 h-1.5 rounded-full bg-[#CCC]" /><span>{item}</span></div>))}</div></div>
       </section>
       
-      <MemoSection />
+      {/* 全域旅行備忘錄 */}
+      <TravelMemoBoard storageKey="jeju-global-memo" />
     </motion.div>
-  );
-}
-
-function MemoSection() {
-  const [memo, setMemo] = useState('');
-  const [saved, setSaved] = useState(false);
-  useEffect(() => { setMemo(localStorage.getItem('jeju-personal-memo') || ''); }, []);
-  const handleChange = (e) => {
-    const val = e.target.value;
-    setMemo(val);
-    localStorage.setItem('jeju-personal-memo', val);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
-  return (
-    <div className="bg-white p-8 rounded-sm shadow-sm border border-[#E6E4DD] mt-8">
-      <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#F0F0F0]">
-        <h3 className="font-sans font-bold text-lg text-text flex items-center"><BookOpen size={20} strokeWidth={1.5} className="mr-2 text-wine"/> 旅行備忘錄</h3>
-        {saved && <span className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded"><CheckCircle size={12} className="mr-1"/> 已儲存</span>}
-      </div>
-      <textarea 
-        className="w-full h-40 p-4 border border-[#DDD] rounded focus:outline-none focus:border-wine text-sm leading-relaxed resize-none text-text placeholder:text-[#CCC] bg-[#FAFAFA]"
-        placeholder="想說什麼就寫什麼，你的專屬景點筆記空間..."
-        value={memo}
-        onChange={handleChange}
-      />
-    </div>
   );
 }
 
