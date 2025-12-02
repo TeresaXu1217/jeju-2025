@@ -5,7 +5,7 @@ import {
   Wind, Coffee, Mountain, ShoppingBag, Calendar, 
   Plane, Bed, Car, Shirt, Snowflake, Utensils, AlertCircle,
   ThermometerSun, Edit3, Save, Info, CheckCircle, CreditCard, Phone, 
-  ArrowRight, BookOpen, PenLine, Luggage
+  ArrowRight, BookOpen, PenLine, Luggage, Plus, Trash2, Check
 } from 'lucide-react';
 
 // --- 背景紋理 ---
@@ -28,17 +28,149 @@ const CircleIcon = ({ char, colorClass = "border-text text-text" }) => (
   </span>
 );
 
+// --- 📝 旅行備忘錄 (留言板模式 - 統一唯一定義) ---
+const MEMO_CATEGORIES = [
+  { id: 'food', label: '美食', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  { id: 'info', label: '資訊', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  { id: 'feature', label: '特色', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  { id: 'other', label: '其他', color: 'bg-gray-100 text-gray-800 border-gray-200' },
+];
+
+function TravelMemoBoard({ storageKey }) {
+  const [memos, setMemos] = useState([]);
+  const [newText, setNewText] = useState('');
+  const [cat, setCat] = useState(MEMO_CATEGORIES[0].label);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+
+  // 載入儲存的資料
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try { setMemos(JSON.parse(saved)); } catch (e) { console.error(e); }
+    } else {
+      setMemos([]);
+    }
+  }, [storageKey]);
+
+  // 儲存到 LocalStorage
+  const saveToLocal = (data) => {
+    setMemos(data);
+    localStorage.setItem(storageKey, JSON.stringify(data));
+  };
+
+  const handleAdd = () => {
+    if (!newText.trim()) return;
+    const newItem = {
+      id: Date.now(),
+      category: cat,
+      text: newText,
+      date: new Date().toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    };
+    saveToLocal([newItem, ...memos]);
+    setNewText('');
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('確定刪除此則筆記？')) {
+      saveToLocal(memos.filter(m => m.id !== id));
+    }
+  };
+
+  const startEdit = (item) => {
+    setEditingId(item.id);
+    setEditText(item.text);
+  };
+
+  const saveEdit = (id) => {
+    const updated = memos.map(m => m.id === id ? { ...m, text: editText } : m);
+    saveToLocal(updated);
+    setEditingId(null);
+  };
+
+  return (
+    <div className="mt-8 border-t border-[#F0F0F0] pt-6">
+      <div className="flex justify-between items-center mb-4">
+         <h3 className="text-xs font-bold tracking-[0.2em] text-wine uppercase flex items-center">
+           <PenLine size={16} strokeWidth={1.5} className="mr-2"/> 旅行備忘錄
+         </h3>
+      </div>
+      <p className="text-xs text-[#888] mb-3">想說什麼就寫什麼，你的專屬景點筆記空間</p>
+
+      <div className="bg-[#FAFAFA] border border-[#EEE] rounded-sm p-4">
+        {/* 輸入區 */}
+        <div className="flex flex-col gap-3 mb-4 border-b border-[#EEE] pb-4">
+          <div className="flex gap-2">
+             <select 
+               value={cat} 
+               onChange={(e) => setCat(e.target.value)}
+               className="p-2 border border-[#DDD] rounded text-sm focus:outline-none focus:border-wine text-[#555] bg-white"
+             >
+               {MEMO_CATEGORIES.map(c => <option key={c.id} value={c.label}>{c.label}</option>)}
+             </select>
+             <input 
+               type="text" 
+               value={newText} 
+               onChange={(e) => setNewText(e.target.value)} 
+               placeholder="輸入筆記..." 
+               className="flex-1 p-2 border border-[#DDD] rounded text-sm focus:outline-none focus:border-wine bg-white"
+               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+             />
+             <button onClick={handleAdd} className="bg-wine text-white px-3 py-2 rounded text-sm hover:bg-coffee transition-colors flex items-center shrink-0">
+               <Plus size={16} className="mr-1"/> 新增
+             </button>
+          </div>
+        </div>
+
+        {/* 列表區 */}
+        <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+          {memos.length === 0 && <p className="text-xs text-[#CCC] text-center py-2">目前沒有筆記</p>}
+          {memos.map(item => (
+            <div key={item.id} className="bg-white p-3 rounded border border-[#E6E4DD] shadow-sm hover:shadow-md transition-shadow group">
+              <div className="flex justify-between items-start mb-1">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${MEMO_CATEGORIES.find(c => c.label === item.category)?.color || 'bg-gray-100 text-gray-600'}`}>
+                    {item.category}
+                  </span>
+                  <span className="text-[10px] text-[#CCC]">{item.date}</span>
+                </div>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {editingId === item.id ? (
+                     <button onClick={() => saveEdit(item.id)} className="text-green-600 hover:text-green-700"><Check size={14}/></button>
+                  ) : (
+                     <button onClick={() => startEdit(item)} className="text-[#AAA] hover:text-wine"><Edit3 size={14}/></button>
+                  )}
+                  <button onClick={() => handleDelete(item.id)} className="text-[#AAA] hover:text-red-400"><Trash2 size={14}/></button>
+                </div>
+              </div>
+              
+              {editingId === item.id ? (
+                <textarea 
+                  value={editText} 
+                  onChange={(e) => setEditText(e.target.value)} 
+                  className="w-full p-2 border border-wine/30 rounded text-sm focus:outline-none mt-2"
+                  rows={2}
+                />
+              ) : (
+                <p className="text-sm text-[#444] leading-relaxed break-words whitespace-pre-wrap mt-1">{item.text}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- 📍 資料設定區 (DATA) ---
 const INFO_DATA = {
   flights: [
     { 
       id: 'outbound', type: 'outbound', title: '去程：台北 (TPE) - 濟州 (CJU)', date: '12月4日 (週四)', time: '02:50 - 06:05', duration: '2小時 15分', 
-      // 📷 [圖片更換] 建議檔名: public/images/flight_out.jpg
       image: '/images/flight_out.jpg'
     },
     { 
       id: 'inbound', type: 'inbound', title: '回程：濟州 (CJU) - 台北 (TPE)', date: '12月8日 (週一)', time: '22:15 - 23:50', duration: '2小時 35分', 
-      // 📷 [圖片更換] 建議檔名: public/images/flight_in.jpg
       image: '/images/flight_in.jpg' 
     }
   ],
@@ -103,7 +235,6 @@ const INFO_DATA = {
 };
 
 const HIKING_DATA = {
-  // 📷 [圖片更換] 爬山頁面大圖 (建議檔名: public/images/hiking_main.jpg)
   headerImage: '/images/hiking_main.jpg',
   rental: { shop: 'Oshare (裝備店)', link: 'https://naver.me/Fdor8Xwk', time: '12/6 18:20 領取 - 12/7 16:00 歸還', note: '' },
   route: { name: '漢拏山 (御里牧上 - 靈室下)', desc: '這是一條「非登頂」路線，但風景被公認是漢拏山最美的。比起登頂的城板岳路線，這裡人潮較少，且能欣賞到壯觀的屏風岩與威瑟岳雪景。', distance: '12.6 KM', duration: '5.5 ~ 6 小時', temp: '0°C 至 -10°C (體感極低)' },
@@ -121,145 +252,75 @@ const HIKING_DATA = {
 const SCHEDULE_DATA = {
   day1: {
     id: 'day1', date: '12/04 (週四)', title: '機場、早晨景點與西部海岸線',
-    // 📷 [圖片更換] Day 1 橫幅
     banner: '/images/day1_banner.jpg',
     route: [
       { 
         time: '06:05', title: '抵達濟州機場 (CJU)', place: '濟州國際機場', note: '出關領行李', link: 'https://map.naver.com/p/search/제주국제공항', 
         desc: '抵達後請先連上機場 Wi-Fi。出關後跟隨指示牌前往租車接駁區。', tips: ['機場便利商店可先買水', '上廁所'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_01_airport.jpg
         image: '/images/day1_01_airport.jpg' 
       },
-      { 
-        time: '07:00', title: '領車', place: '樂天租車濟州 Auto 屋', note: '07:00 - 07:45', link: 'https://naver.me/FqZqommG', 
-        desc: '濟州市 龍潭二洞 855。', tips: ['檢查車況並錄影', '確認燃油種類'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_02_car.jpg
-        image: '/images/day1_02_car.jpg' 
-      },
-      { 
-        time: '08:30', title: '景點', place: '龍頭岩 & 龍淵吊橋', note: '08:30 - 09:30', link: 'https://naver.me/GsougTPq', 
+      { time: '07:00', title: '領車', place: '樂天租車濟州 Auto 屋', note: '07:00 - 07:45', link: 'https://naver.me/FqZqommG', desc: '濟州市 龍潭二洞 855。', tips: ['檢查車況並錄影', '確認燃油種類'], image: '/images/day1_02_car.jpg' },
+      { time: '08:30', title: '景點', place: '龍頭岩 & 龍淵吊橋', note: '08:30 - 09:30', link: 'https://naver.me/GsougTPq', 
         desc: '利用 Osulloc 開館前空檔，欣賞龍頭岩奇景。', 
         guide: '龍頭岩高10米，長30米，是由漢拏山火山口噴出的熔岩在海上凝結而成，模樣有如龍頭。傳說住在海底龍宮的一條龍想要升天，但因未能如願而變成岩石。',
-        tips: ['海邊風大請注意保暖'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_03_dragonhead.jpg
-        image: '/images/day1_03_dragonhead.jpg'
-      },
-      { 
-        time: '10:00', title: '觀光', place: 'Osulloc 雪綠茶博物館', note: '10:00 - 11:30', link: 'https://naver.me/xquidf7l', 
+        tips: ['海邊風大請注意保暖'], image: '/images/day1_03_dragonhead.jpg' },
+      { time: '10:00', title: '觀光', place: 'Osulloc 雪綠茶博物館', note: '10:00 - 11:30', link: 'https://naver.me/xquidf7l', 
         desc: '準時開館後入場，避開人潮。Innisfree 濟州小屋也在旁邊。', 
         guide: 'O’sulloc 位於濟州島西廣茶園入口，這裡不僅是韓國最大的茶文化展示館，更是為了推廣韓國傳統茶文化而建。建築本身融合了自然景觀，落地窗外的綠茶園景色非常療癒。',
-        tips: ['必吃綠茶冰淇淋', '戶外茶園拍照'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_04_osulloc.jpg
-        image: '/images/day1_04_osulloc.jpg'
-      },
-      { 
-        time: '11:30', title: '午餐', place: '西南/中文地區', note: '11:30 - 12:30', link: '', 
-        desc: '前往 Aewol 的途中享用午餐。', tips: [], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_05_lunch.jpg
-        image: '/images/day1_05_lunch.jpg'
-      },
-      { 
-        time: '13:45', title: '下午茶/散步', place: 'Aewol 咖啡街', note: '13:45 - 17:30', link: 'https://naver.me/55PZwITc', 
+        tips: ['必吃綠茶冰淇淋', '戶外茶園拍照'], image: '/images/day1_04_osulloc.jpg' },
+      { time: '11:30', title: '午餐', place: '西南/中文地區', note: '11:30 - 12:30', link: '', desc: '前往 Aewol 的途中享用午餐。', tips: [], image: '/images/day1_05_lunch.jpg' },
+      { time: '13:45', title: '下午茶/散步', place: 'Aewol 咖啡街', note: '13:45 - 17:30', link: 'https://naver.me/55PZwITc', 
         desc: '長途移動後享受悠閒下午。海岸散步路風景優美。', 
         guide: '涯月邑漢潭海岸散步路沿著海岸線蜿蜒，這裡聚集了許多特色咖啡廳。知名的 G-Dragon 咖啡廳 (Monsant) 雖然已易主，但該區域的夕陽美景依然是濟州西部最熱門的景點之一。',
-        tips: ['海景第一排'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_06_aewol.jpg
-        image: '/images/day1_06_aewol.jpg'
-      },
-      { 
-        time: '17:30', title: '入住', place: 'Goyohandal (Jeju Aewol Quiet Month)', note: '17:30 - 18:00', link: 'https://naver.me/xBMOHYtw', 
-        desc: '濟州市 涯月邑 涯月裡 1859。', tips: ['確認 Check-in 時間'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_07_hotel.jpg
-        image: '/images/day1_07_hotel.jpg'
-      },
-      { 
-        time: '18:30', title: '晚餐', place: '涯月邑晚餐', note: '18:30', link: '', 
-        desc: '在住宿附近享用晚餐。', tips: [], 
-        // 📷 [圖片更換] 建議檔名: public/images/day1_08_dinner.jpg
-        image: '/images/day1_08_dinner.jpg'
-      },
+        tips: ['海景第一排'], image: '/images/day1_06_aewol.jpg' },
+      { time: '17:30', title: '入住', place: 'Goyohandal (Jeju Aewol Quiet Month)', note: '17:30 - 18:00', link: 'https://naver.me/xBMOHYtw', desc: '濟州市 涯月邑 涯月裡 1859。', tips: ['確認 Check-in 時間'], image: '/images/day1_07_hotel.jpg' },
+      { time: '18:30', title: '晚餐', place: '涯月邑晚餐', note: '18:30', link: '', desc: '在住宿附近享用晚餐。', tips: [], image: '/images/day1_08_dinner.jpg' },
     ],
     food: [
       { 
         name: 'Nolman 海鮮拉麵', desc: '無限挑戰拍攝地，湯頭鮮甜，海鮮給得很大方。', link: 'https://map.naver.com/p/search/놀맨', 
         tips: ['需抽取號碼牌', '只收現金 (建議確認)'],
-        // 📷 [圖片更換] 建議檔名: public/images/day1_food_nolman.jpg
         image: '/images/day1_food_nolman.jpg'
       },
-      { 
-        name: 'Crab Jack', desc: '美式手抓海鮮，將滿滿的海鮮倒在桌上，視覺效果滿分，適合多人享用。', link: 'https://map.naver.com/p/search/크랩잭', 
-        tips: ['提供木槌敲螃蟹，舒壓好吃'],
-        // 📷 [圖片更換] 建議檔名: public/images/day1_food_crabjack.jpg
-        image: '/images/day1_food_crabjack.jpg'
-      }
+      { name: 'Crab Jack', desc: '美式手抓海鮮，將滿滿的海鮮倒在桌上，視覺效果滿分，適合多人享用。', link: 'https://map.naver.com/p/search/크랩잭', tips: ['提供木槌敲螃蟹，舒壓好吃'], image: '/images/day1_food_crabjack.jpg' }
     ],
     cafe: [
       { 
         name: 'Cafe Knotted', desc: '首爾超人氣甜甜圈的濟州分店，擁有可愛的戶外庭園與限定口味。', link: 'https://map.naver.com/p/search/노티드제주', 
         tips: ['通常需要排隊', '濟州限定綠茶口味必點'],
-        // 📷 [圖片更換] 建議檔名: public/images/day1_cafe_knotted.jpg
         image: '/images/day1_cafe_knotted.jpg'
       },
-      { 
-        name: 'Tribe', desc: '以可愛的造型馬卡龍與舒芙蕾鬆餅聞名，店內裝潢非常有波希米亞風。', link: 'https://map.naver.com/p/search/트라이브', tips: [],
-        // 📷 [圖片更換] 建議檔名: public/images/day1_cafe_tribe.jpg
-        image: '/images/day1_cafe_tribe.jpg'
-      }
+      { name: 'Tribe', desc: '以可愛的造型馬卡龍與舒芙蕾鬆餅聞名，店內裝潢非常有波希米亞風。', link: 'https://map.naver.com/p/search/트라이브', tips: [], image: '/images/day1_cafe_tribe.jpg' }
     ],
     backup: [
       { 
         name: 'Arte Museum', desc: '韓國最大的沉浸式光影藝術展，雨天首選備案。', link: 'https://map.naver.com/p/search/아르떼뮤지엄제주', 
         tips: ['館內較暗，走路小心', 'Wave 展區非常壯觀'],
-        // 📷 [圖片更換] 建議檔名: public/images/day1_backup_arte.jpg
         image: '/images/day1_backup_arte.jpg'
       }
     ]
   },
   day2: {
     id: 'day2', date: '12/05 (週五)', title: '西部精華、冬季花海與南部光影',
-    // 📷 [圖片更換] Day 2 橫幅
     banner: '/images/day2_banner.jpg',
     route: [
       { time: '09:30', title: '玩樂', place: '9.81 Park 重力賽車', note: '09:30 - 12:30', link: 'https://naver.me/GBvp7lRv', 
         desc: '重力賽車公園，不使用引擎俯衝。', 
         guide: '9.81 Park 是以重力加速度 (g=9.81m/s²) 為主題的環保賽車公園。車輛沒有引擎，完全依靠坡度和重力滑行，可以一邊享受速度感，一邊欣賞飛揚島的海景。賽後還可以透過 App 下載自己的比賽影片。',
-        tips: ['不能穿拖鞋/高跟鞋', '下載 App 綁定票券'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day2_01_981park.jpg
-        image: '/images/day2_01_981park.jpg' 
-      },
-      { time: '12:40', title: '午餐', place: '濟州堂 (Jejudang)', note: '12:40 - 13:40', link: 'https://naver.me/x4GM6Ft7', 
-        desc: '近期爆紅的大型農倉風格烘焙咖啡廳。', tips: ['洋蔥麵包是招牌'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day2_02_lunch.jpg
-        image: '/images/day2_02_lunch.jpg' 
-      },
+        tips: ['不能穿拖鞋/高跟鞋', '下載 App 綁定票券'], image: '/images/day2_01_981park.jpg' },
+      { time: '12:40', title: '午餐', place: '濟州堂 (Jejudang)', note: '12:40 - 13:40', link: 'https://naver.me/x4GM6Ft7', desc: '近期爆紅的大型農倉風格烘焙咖啡廳。', tips: ['洋蔥麵包是招牌'], image: '/images/day2_02_lunch.jpg' },
       { time: '14:10', title: '賞花', place: '山茶花之丘 (Camellia Hill)', note: '14:10 - 15:40', link: 'https://naver.me/FytfmxtE', 
         desc: '冬季推薦行程，滿滿的山茶花海。', 
         guide: '擁有30年歷史的東洋最大山茶花樹木園。園內種植了來自80個國家、500多種、共6000多棵山茶花樹。冬季是山茶花盛開的季節，整個園區會被染成一片浪漫的粉紅色。',
-        tips: ['停留 1.5 小時', '拍照聖地'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day2_03_camellia.jpg
-        image: '/images/day2_03_camellia.jpg' 
-      },
-      { time: '16:00', title: '體驗', place: 'WATERWORLD 水之幻境', note: '16:00 - 18:00', link: 'https://naver.me/FZ86s9bO', 
-        desc: '位於濟州世界盃體育場內的水上世界。', tips: ['下午場次', '享受光影效果'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day2_04_waterworld.jpg
-        image: '/images/day2_04_waterworld.jpg' 
-      },
-      { time: '18:00', title: '入住', place: 'Heyy Seogwipo Hotel', note: '18:00 - 18:30', link: 'https://naver.me/GZ6xBjW8', 
-        desc: '西歸浦市 西歸洞 820-1。', tips: ['Check-in'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day2_05_hotel.jpg
-        image: '/images/day2_05_hotel.jpg' 
-      },
-      { time: '18:30', title: '晚餐', place: '西歸浦每日偶來市場', note: '18:30 - 20:00', link: 'https://naver.me/5UTwYDC6', 
-        desc: '西歸浦最大的傳統市場。', tips: ['橘子麻糬', '炸黑豬肉捲'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day2_06_market.jpg
-        image: '/images/day2_06_market.jpg' 
-      }
+        tips: ['停留 1.5 小時', '拍照聖地'], image: '/images/day2_03_camellia.jpg' },
+      { time: '16:00', title: '體驗', place: 'WATERWORLD 水之幻境', note: '16:00 - 18:00', link: 'https://naver.me/FZ86s9bO', desc: '位於濟州世界盃體育場內的水上世界。', tips: ['下午場次', '享受光影效果'], image: '/images/day2_04_waterworld.jpg' },
+      { time: '18:00', title: '入住', place: 'Heyy Seogwipo Hotel', note: '18:00 - 18:30', link: 'https://naver.me/GZ6xBjW8', desc: '西歸浦市 西歸洞 820-1。', tips: ['Check-in'], image: '/images/day2_05_hotel.jpg' },
+      { time: '18:30', title: '晚餐', place: '西歸浦每日偶來市場', note: '18:30 - 20:00', link: 'https://naver.me/5UTwYDC6', desc: '西歸浦最大的傳統市場。', tips: ['橘子麻糬', '炸黑豬肉捲'], image: '/images/day2_06_market.jpg' }
     ],
     food: [], cafe: [], backup: []
   },
   day3: {
     id: 'day3', date: '12/06 (週六)', title: '牛島、東部海岸與裝備領取',
-    // 📷 [圖片更換] Day 3 橫幅
     banner: '/images/day3_banner.jpg',
     route: [
       { time: '08:00', title: '出發', place: '前往城山港', note: '長途移動 1h 20m', link: 'https://naver.me/5KqVxB8K', desc: '從西歸浦出發，前往東部港口。', tips: ['早點出發避免塞車'], image: '/images/day3_01_port.jpg' },
@@ -267,17 +328,11 @@ const SCHEDULE_DATA = {
       { time: '10:00', title: '渡輪', place: '前往牛島', note: '10:00 - 10:20', link: '', desc: '搭乘渡輪前往牛島。', tips: [], image: '/images/day3_03_ferry.jpg' },
       { time: '10:20', title: '觀光', place: '牛島環島', note: '10:20 - 14:50', link: 'https://naver.me/xDCkodxV', desc: '牛島海洋道立公園環島遊。', 
         guide: '牛島位於濟州島東端，因外型像臥牛而得名。這裡有韓國唯一的珊瑚沙海水浴場——西濱白沙。騎著電動車環島，海風拂面，隨處可見的石頭矮牆與碧海藍天構成最美的濟州印象。',
-        tips: ['花生冰淇淋', '漢拿山炒飯'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day3_04_udo.jpg
-        image: '/images/day3_04_udo.jpg' 
-      },
+        tips: ['花生冰淇淋', '漢拿山炒飯'], image: '/images/day3_04_udo.jpg' },
       { time: '15:30', title: '景點', place: '城山日出峰 (可選)', note: '15:30 - 17:00', link: 'https://naver.me/GdlvFhgw', 
         desc: '世界自然遺產。可選擇登頂 (1.5h) 或前往光峙海岸平地賞景。', 
         guide: '城山日出峰是10萬年前海底火山爆發形成的巨大岩石山，頂部有一個巨大的火山口。這裡被聯合國教科文組織列為世界自然遺產。若體力允許登頂，可以俯瞰整個濟州島東部海岸線的壯麗景色。',
-        tips: ['保留體力給明天爬山'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day3_05_sunrisepeak.jpg
-        image: '/images/day3_05_sunrisepeak.jpg' 
-      },
+        tips: ['保留體力給明天爬山'], image: '/images/day3_05_sunrisepeak.jpg' },
       { time: '18:20', title: '領裝備', place: 'Oshare 機場總店', note: '18:20 - 18:50', link: 'https://naver.me/Fdor8Xwk', desc: '領取預約好的登山裝備。', tips: ['檢查冰爪', '試穿鞋子'], image: '/images/day3_06_oshare.jpg' },
       { time: '18:50', title: '入住', place: 'Urbanstay Jeju Airport', note: '18:50 - 19:10', link: 'https://naver.me/xfYL6fGn', desc: '濟州市 連洞 263-2 (近機場)。', tips: ['Check-in'], image: '/images/day3_07_hotel.jpg' },
       { time: '19:10', title: '晚餐/採買', place: '蓮洞商圈 / 新羅免稅店', note: '19:10 - 21:00', link: 'https://naver.me/5CFIagYV', desc: '採買明天漢拏山的行動糧 (飯捲、水)。', tips: ['新羅免稅店就在附近'], image: '/images/day3_08_dinner.jpg' }
@@ -286,7 +341,6 @@ const SCHEDULE_DATA = {
   },
   day4: {
     id: 'day4', date: '12/07 (週日)', title: '漢拏山健行與黑豬肉',
-    // 📷 [圖片更換] Day 4 橫幅
     banner: '/images/day4_banner.jpg',
     route: [
       { time: '06:50', title: '出發', place: '從 Urbanstay 出發', note: '06:50', link: '', desc: '提早出發，搶御里牧停車位。', tips: ['早餐要吃飽'], image: '/images/day4_01_start.jpg' },
@@ -294,10 +348,7 @@ const SCHEDULE_DATA = {
       { time: '08:00', title: '登山', place: '漢拏山 (御里牧➝靈室)', note: '08:00 - 13:30', link: '', 
         desc: '御里牧 ➝ 威勢岳 ➝ 靈室。總攀登時間約 5.5-6 小時 (含休息)。', 
         guide: '漢拏山是韓國最高的山 (1947m)，也是一座休眠火山。御里牧路線雖然不能登頂，但沿途經過的鳥接岳與萬歲東山能看到絕美的雪景與雲海。靈室路線則以奇岩怪石著稱，被稱為「靈室奇岩」，風景如畫。',
-        tips: ['注意保暖', '垃圾自行帶下山'], 
-        // 📷 [圖片更換] 建議檔名: public/images/day4_03_hallasan.jpg
-        image: '/images/day4_03_hallasan.jpg' 
-      },
+        tips: ['注意保暖', '垃圾自行帶下山'], image: '/images/day4_03_hallasan.jpg' },
       { time: '13:30', title: '接駁', place: '靈室登山口', note: '13:30 - 15:30', link: '', desc: '靈室下山後，搭乘 240 號公車返回御里牧停車場取車。', tips: ['備妥零錢/T-money'], image: '/images/day4_04_bus.jpg' },
       { time: '15:30', title: '還裝備', place: 'Oshare', note: '15:30 - 16:00', link: 'https://naver.me/Fdor8Xwk', desc: '歸還登山裝備。預留充裕時間應對山區交通。', tips: ['確認無遺漏物品'], image: '/images/day4_05_return.jpg' },
       { time: '17:00', title: '晚餐', place: '市區吃晚餐', note: '17:00', link: 'https://naver.me/G3P4DCkY', desc: '慰勞辛苦的雙腿，享用黑豬肉大餐。', tips: ['東門市場吃小吃', '黑豬肉燒烤'], image: '/images/day4_06_dinner.jpg' }
@@ -306,7 +357,6 @@ const SCHEDULE_DATA = {
   },
   day5: {
     id: 'day5', date: '12/08 (週一)', title: '特色麵包、東部文化與返程',
-    // 📷 [圖片更換] Day 5 橫幅
     banner: '/images/day5_banner.jpg',
     route: [
       { time: '09:30', title: '麵包', place: 'Audrant Bakery (Odeurang)', note: '09:30 - 10:00', link: 'https://naver.me/xNnJCq9r', desc: '著名的西餅店 (Hamdeok店)。', tips: ['大蒜麵包必買'], image: '/images/day5_01_bakery.jpg' },
@@ -474,7 +524,7 @@ function DetailModal({ isOpen, onClose, data }) {
           
           {/* 標題區 (純文字，無圖) */}
           <div className="p-8 md:p-10 border-b border-[#F0F0F0] bg-white">
-             <h2 className="text-3xl md:text-4xl font-serif font-bold text-text mb-2 tracking-wide">{data.place || data.title}</h2>
+             <h2 className="text-3xl md:text-4xl font-serif font-bold text-wine mb-2 tracking-wide">{data.place || data.title}</h2>
              <div className="w-10 h-1 bg-wine mt-4 mb-2"></div>
              <p className="text-[#888] tracking-widest uppercase text-xs font-medium mt-2">{data.title || "TRAVEL GUIDE"}</p>
           </div>
@@ -514,19 +564,8 @@ function DetailModal({ isOpen, onClose, data }) {
               </div>
             )}
             
-            {/* 旅行備忘錄 */}
-            <div className="pt-10 border-t border-[#F0F0F0]">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="text-xs font-bold tracking-[0.2em] text-wine uppercase flex items-center"><PenLine size={16} strokeWidth={1.5} className="mr-2"/> 旅行備忘錄</h3>
-                 {saved && <span className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded"><CheckCircle size={12} className="mr-1"/> 已儲存</span>}
-               </div>
-               <textarea 
-                 value={note} 
-                 onChange={handleNoteChange} 
-                 placeholder="想說什麼就寫什麼，你的專屬景點筆記空間..." 
-                 className="w-full h-32 p-4 bg-[#FAFAFA] border border-[#EEE] rounded focus:outline-none focus:border-wine text-sm leading-relaxed resize-none text-text placeholder:text-[#CCC]"
-               />
-            </div>
+            {/* 旅行備忘錄 (使用新的 List 模式) */}
+            <TravelMemoBoard storageKey={`jeju-memo-list-${data.id || data.place || data.title || 'default'}`} />
             
             {/* Map Link Button - 統一為 VIEW MAP 酒紅按鈕 */}
             {data.link && (
@@ -573,7 +612,6 @@ function InfoView({ data, onItemClick }) {
         <div className="grid md:grid-cols-3 gap-6 mt-6">
           {/* 去程 */}
           <div className="bg-white p-6 rounded-sm shadow-sm border border-[#E6E4DD]">
-            {/* 修改二: 比例 1775/900 = 1.97 */}
             <div className="mb-4 w-full aspect-[1.97] bg-gray-100 overflow-hidden rounded relative"><img src={data.flights[0].image} className="w-full h-full object-cover" alt="Outbound"/></div>
             <h3 className="font-bold text-lg text-text mb-2 font-sans">去程 (Outbound)</h3>
             <div className="space-y-1 text-sm text-[#666]">
@@ -592,7 +630,7 @@ function InfoView({ data, onItemClick }) {
               <p>{data.flights[1].time}</p>
             </div>
           </div>
-          {/* 行李 (修改一: 移除上方圖示區塊，純文字) */}
+          {/* 行李 (純文字列表) */}
           <div className="bg-white p-6 rounded-sm shadow-sm border border-[#E6E4DD]">
             <h3 className="font-bold text-lg text-text mb-4 font-sans border-b border-[#F0F0F0] pb-2">行李額度 (Baggage)</h3>
             <div className="space-y-4 text-xs text-[#666]">
@@ -612,9 +650,9 @@ function InfoView({ data, onItemClick }) {
       <div className="flex flex-wrap gap-3 justify-end pt-4 border-t border-[#F0F0F0]">
         {/* 住宿地圖按鈕: 酒紅VIEW MAP */}
         {hotel.link && <a href={hotel.link} target="_blank" rel="noreferrer" className="flex items-center justify-center px-4 py-2 bg-wine text-white text-xs tracking-widest rounded hover:bg-coffee transition-colors gap-2 font-bold"><span>VIEW MAP</span><ArrowRight size={14}/></a>}
-        {/* 停車與指南按鈕: 修改七 - 深灰底塊 */}
-        {hotel.parkingInfo && <button className="flex items-center justify-center px-4 py-2 bg-[#666] text-white text-xs tracking-widest rounded hover:bg-[#444] transition-colors" onClick={() => alert(hotel.parkingInfo)}>停車資訊</button>}
-        {hotel.guideLink && <a href={hotel.guideLink} target="_blank" rel="noreferrer" className="flex items-center justify-center px-4 py-2 bg-[#666] text-white text-xs tracking-widest rounded hover:bg-[#444] transition-colors">住宿指南</a>}
+        {/* 停車與指南按鈕: 深灰底塊 */}
+        {hotel.parkingInfo && <button className="flex items-center justify-center px-4 py-2 bg-[#444] text-white text-xs tracking-widest rounded hover:bg-[#222] transition-colors" onClick={() => alert(hotel.parkingInfo)}>停車資訊</button>}
+        {hotel.guideLink && <a href={hotel.guideLink} target="_blank" rel="noreferrer" className="flex items-center justify-center px-4 py-2 bg-[#444] text-white text-xs tracking-widest rounded hover:bg-[#222] transition-colors">住宿指南</a>}
       </div></div>))}</div></section>
       
       {/* 3. 租車資訊 */}
@@ -716,9 +754,9 @@ function HikingView({ data }) {
           <section><h3 className="text-xl font-sans text-text mb-4 flex items-center"><AlertCircle className="mr-2" size={18} strokeWidth={1.5} /> 裝備指南</h3><div className="space-y-4">{data.gear.map((g, i) => (<div key={i} className="flex bg-white p-4 rounded border border-[#E6E4DD]"><div className="w-24 flex-shrink-0 font-bold text-[#888] text-sm uppercase">{g.item}</div><div className="text-sm text-text leading-relaxed">{g.desc}</div></div>))}</div></section>
         </div>
         <div className="space-y-8"><div className="bg-text text-[#F5F4F0] p-6 rounded shadow-lg"><h4 className="text-lg font-sans mb-4 border-b border-gray-600 pb-2">裝備租借</h4><p className="font-bold text-xl mb-1 text-white">{data.rental.shop}</p>
-        {/* 修改八：爬山地圖連結改為酒紅 VIEW MAP，移除淺灰字 */}
+        {/* 爬山地圖連結 (酒紅VIEW MAP) */}
         <a href={data.rental.link} target="_blank" rel="noreferrer" className="flex items-center justify-center px-4 py-2 bg-wine text-white text-xs tracking-widest rounded hover:bg-coffee transition-colors gap-2 mt-4 font-bold"><span>VIEW MAP</span><ArrowRight size={14}/></a>
-        <div className="space-y-4 text-sm mt-4"><div><span className="block text-[#888] text-xs mb-1">借用時間</span><p className="text-white/90">{data.rental.time}</p></div></div></div></div>
+        <div className="space-y-4 text-sm mt-4"><div><span className="block text-[#888] text-xs mb-1">借用時間</span><p className="text-white/90">{data.rental.time}</p></div>{/* 移除警告 */}</div></div></div>
       </div>
     </motion.div>
   );
@@ -734,9 +772,7 @@ function ScheduleView({ schedule, activeDay, onDayChange, onItemClick, getRouteI
       <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-8 relative z-10 space-y-12">
         <div className="bg-white rounded shadow-xl shadow-[#00000005] border border-[#EBE9E4] overflow-hidden">
           <div className="p-6 border-b border-[#F0F0F0] bg-white/50 sticky top-0 flex justify-between items-center"><h3 className="text-xs font-bold tracking-[0.2em] text-[#888] uppercase flex items-center"><MapPin size={14} strokeWidth={1.5} className="mr-2"/> Main Route</h3><span className="text-[10px] text-[#AAA]">點擊項目查看詳情</span></div>
-          <div className="divide-y divide-[#F0F0F0]">{routeItems.map((item, idx) => (<div key={idx} onClick={() => onItemClick(item)} className="p-6 hover:bg-[#FAF9F6] transition-colors flex gap-6 cursor-pointer group"><div className="w-16 flex-shrink-0 text-right font-medium text-text font-sans pt-1">{item.time}</div><div className="flex-1 border-l-2 border-[#F0F0F0] pl-6 relative"><div className="absolute -left-[7px] top-2 w-3 h-3 rounded-full bg-[#E6E4DD] border-2 border-white group-hover:bg-wine transition-colors" /><h4 className="text-lg font-medium text-text group-hover:text-wine font-sans">{item.place}</h4><p className="text-xs font-bold text-[#AA9988] tracking-wider uppercase mb-1">{item.title}</p><p className="text-sm text-[#666] font-light mb-2 line-clamp-1">{item.desc || item.note}</p>
-          {/* 修改四：簡化色彩，使用深灰色文字 + 酒紅箭頭 */}
-          <div className="flex items-center text-xs text-text/60 group-hover:text-wine transition-colors mt-2 font-bold tracking-wide">READ MORE <ChevronRight size={12} className="ml-1"/></div></div></div>))}</div>
+          <div className="divide-y divide-[#F0F0F0]">{routeItems.map((item, idx) => (<div key={idx} onClick={() => onItemClick(item)} className="p-6 hover:bg-[#FAF9F6] transition-colors flex gap-6 cursor-pointer group"><div className="w-16 flex-shrink-0 text-right font-medium text-text font-sans pt-1">{item.time}</div><div className="flex-1 border-l-2 border-[#F0F0F0] pl-6 relative"><div className="absolute -left-[7px] top-2 w-3 h-3 rounded-full bg-[#E6E4DD] border-2 border-white group-hover:bg-wine transition-colors" /><h4 className="text-lg font-medium text-text group-hover:text-wine font-sans">{item.place}</h4><p className="text-xs font-bold text-[#AA9988] tracking-wider uppercase mb-1">{item.title}</p><p className="text-sm text-[#666] font-light mb-2 line-clamp-1">{item.desc || item.note}</p><div className="flex items-center text-xs text-text/60 group-hover:text-wine transition-colors mt-2 font-bold tracking-wide">READ MORE <ChevronRight size={12} className="ml-1"/></div></div></div>))}</div>
         </div>
         <HorizontalSection title="Nearby Food 美食" icon={<Utensils size={16} strokeWidth={1.5}/>} items={dayData.food} onItemClick={onItemClick} />
         <HorizontalSection title="Coffee & Dessert 咖啡甜點" icon={<Coffee size={16} strokeWidth={1.5}/>} items={dayData.cafe} onItemClick={onItemClick} />
